@@ -1,0 +1,15 @@
+export const QUERY_KEYS = {
+  profile: (id: string) => ['profile', id] as const,
+  tickets: (filters?: Record<string, unknown>) => ['tickets', filters ?? {}] as const,
+  ticket: (id: string) => ['ticket', id] as const,
+  ticketComments: (ticketId: string) => ['ticket-comments', ticketId] as const,
+  ticketAttachments: (ticketId: string) => ['ticket-attachments', ticketId] as const,
+  notifications: (userId: string) => ['notifications', userId] as const,
+  broadcasts: () => ['broadcasts'] as const,
+  goldRate: () => ['gold-rate'] as const,
+  goldRateHistory: () => ['gold-rate-history'] as const,
+  stores: () => ['stores'] as const,
+  store: (code: string) => ['store', code] as const,
+  pendingTechnicians: () => ['pending-technicians'] as const,
+  technicians: () => ['technicians'] as const,
+};

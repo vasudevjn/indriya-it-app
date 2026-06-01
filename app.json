@@ -1,0 +1,75 @@
+{
+  "expo": {
+    "name": "Indriya IT App",
+    "slug": "indriya-it-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "scheme": "indriya",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1B3A7A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.indriyajewellery.itapp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Used to attach photos to IT tickets",
+        "NSPhotoLibraryUsageDescription": "Used to attach photos and videos from gallery to IT tickets"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#1B3A7A"
+      },
+      "package": "com.indriyajewellery.itapp",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/logo.png",
+          "color": "#1B3A7A"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos and videos to attach them to IT tickets.",
+          "cameraPermission": "The app accesses your camera to attach photos to IT tickets."
+        }
+      ],
+      "expo-document-picker"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "18ff157a-f9f1-4b5c-957d-4f5be01d977a"
+      }
+    }
+  }
+}
