@@ -115,7 +115,7 @@ export default function TechnicianHome() {
             </View>
 
             {/* Gold Rate */}
-            <View style={styles.section}>
+            <View style={styles.headerPad}>
               <GoldRateCard />
             </View>
 
@@ -166,7 +166,6 @@ const styles = StyleSheet.create({
   list: { paddingBottom: 32 },
   headerPad: { paddingHorizontal: 16 },
   greeting: { fontWeight: '700', color: '#111827', marginTop: 16, marginBottom: 16 },
-  section: { paddingHorizontal: 0 },
   sectionLabel: {
     color: '#6B7280',
     fontWeight: '700',

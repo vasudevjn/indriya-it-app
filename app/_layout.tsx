@@ -6,6 +6,7 @@ import { PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { queryClient } from '../lib/queryClient';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
@@ -51,10 +52,17 @@ function AuthGate() {
   useEffect(() => {
     if (!profile) return;
     (async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') return;
-      const token = await Notifications.getExpoPushTokenAsync();
-      await updatePushToken(profile.id, token.data).catch(() => null);
+      try {
+        const { status } = await Notifications.requestPermissionsAsync();
+        if (status !== 'granted') return;
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId as string | undefined;
+        const token = await Notifications.getExpoPushTokenAsync(
+          projectId ? { projectId } : undefined,
+        );
+        await updatePushToken(profile.id, token.data).catch(() => null);
+      } catch {
+        // Push token registration is non-critical — never crash the app over it
+      }
     })();
   }, [profile?.id]);
 
@@ -71,7 +79,7 @@ function AuthGate() {
     if (profile.role === 'requester' && profile.approval_status === 'approved') {
       router.replace('/(requester)/home');
     } else if (profile.role === 'technician' && profile.approval_status === 'approved') {
-      router.replace('/(technician)/queue');
+      router.replace('/(technician)/home');
     } else if (profile.role === 'admin') {
       router.replace('/(admin)/home');
     } else if (profile.role === 'technician' && profile.approval_status === 'pending') {
@@ -90,8 +98,11 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <PaperProvider theme={theme}>
         <SafeAreaProvider>
-          <StatusBar style="light" />
-          <Stack screenOptions={{ headerShown: false }}>
+          <StatusBar style="auto" backgroundColor="#1B3A7A" />
+          <Stack screenOptions={{
+            headerShown: false,
+            statusBarStyle: 'dark',
+          }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />
             <Stack.Screen name="(requester)" />

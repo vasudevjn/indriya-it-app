@@ -153,7 +153,7 @@ export function useAssignTicket(ticketId: string, requesterId: string) {
       await createNotification({
         recipient_id: requesterId,
         ticket_id: ticketId,
-        title: 'Ticket Assigned',
+        title: `Ticket ${ticket.ticket_number} Assigned`,
         body: `Your ticket has been assigned to ${profile.full_name}`,
         type: 'ticket_assigned',
       });

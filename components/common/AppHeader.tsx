@@ -10,7 +10,10 @@ interface Props {
 
 export function AppHeader({ title, showBack = false, right }: Props) {
   return (
-    <Appbar.Header style={{ backgroundColor: '#1B3A7A' }}>
+    <Appbar.Header
+      style={{ backgroundColor: '#1B3A7A', height: 52 }}
+      statusBarHeight={0}
+    >
       {showBack && <Appbar.BackAction onPress={() => router.back()} color="#fff" />}
       <Appbar.Content title={title} titleStyle={{ color: '#fff', fontWeight: '700' }} />
       {right}

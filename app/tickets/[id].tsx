@@ -22,7 +22,7 @@ import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { canAssignTicket, canChangeStatus, canSeeInternalComments } from '../../lib/auth/permissions';
 import { ALL_STATUSES, STATUS_LABELS } from '../../constants/ticket';
 import { CATEGORY_LABELS } from '../../constants/categories';
-import { TicketStatus } from '../../types';
+import { TicketStatus, UserRole } from '../../types';
 import { formatDateTime } from '../../lib/utils/date';
 import { createNotification } from '../../lib/api/notifications';
 
@@ -77,6 +77,23 @@ export default function TicketDetail() {
     (c: CommentWithAuthor) => canInternal || !c.is_internal,
   );
 
+  // RLS may block the profiles join for non-owner sessions (e.g. requester
+  // can't read a technician's profile row). Build a lookup from profile data
+  // we already have in scope so author names display correctly.
+  const knownAuthors: Record<string, { id: string; full_name: string; role: UserRole }> = {};
+  if (ticket.requester) {
+    knownAuthors[ticket.requester.id] = { id: ticket.requester.id, full_name: ticket.requester.full_name, role: 'requester' };
+  }
+  if (ticket.assignee) {
+    knownAuthors[ticket.assignee.id] = { id: ticket.assignee.id, full_name: ticket.assignee.full_name, role: 'technician' };
+  }
+  knownAuthors[profile.id] = { id: profile.id, full_name: profile.full_name, role: profile.role };
+
+  const enrichedComments = visibleComments.map((c: CommentWithAuthor) => ({
+    ...c,
+    author: c.author ?? knownAuthors[c.author_id] ?? null,
+  }));
+
   const handleStatusChange = (status: TicketStatus) => {
     setStatusModal(false);
     const updates =
@@ -115,8 +132,13 @@ export default function TicketDetail() {
   return (
     <Screen edges={['top', 'left', 'right']}>
       <AppHeader title={ticket.ticket_number} showBack />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={styles.scroll}
           refreshControl={
             <RefreshControl
@@ -258,7 +280,7 @@ export default function TicketDetail() {
             </Text>
           </View>
 
-          {visibleComments.map((c: CommentWithAuthor) => (
+          {enrichedComments.map((c: CommentWithAuthor) => (
             <CommentBubble key={c.id} comment={c} isOwnComment={c.author_id === profile.id} />
           ))}
 

@@ -1,9 +1,9 @@
 import React, { useRef } from 'react';
 import {
   View, StyleSheet, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform,
-  Image, ScrollView, Alert,
+  Image, ScrollView, Alert, TextInput,
 } from 'react-native';
-import { Text, TextInput, Button, Chip } from 'react-native-paper';
+import { Text, Button, Chip } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -40,6 +40,7 @@ export default function CreateTicket() {
   const { profile } = useCurrentUser();
   const { mutate: createTicket, isPending } = useCreateTicket();
   const [inputText, setInputText] = React.useState('');
+  const [inputFocused, setInputFocused] = React.useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   const handleDiscard = () => {
@@ -186,8 +187,15 @@ export default function CreateTicket() {
   ];
 
   const renderMessage = ({ item }: { item: ChatMessage }) => (
-    <View style={[styles.bubble, item.sender === 'user' ? styles.userBubble : styles.systemBubble]}>
-      <Text style={item.sender === 'user' ? styles.userText : styles.systemText}>{item.text}</Text>
+    <View style={item.sender === 'user' ? styles.msgRowUser : styles.msgRowSystem}>
+      {item.sender === 'system' && (
+        <View style={styles.botAvatar}>
+          <Ionicons name="hardware-chip-outline" size={14} color="#1B3A7A" />
+        </View>
+      )}
+      <View style={[styles.bubble, item.sender === 'user' ? styles.userBubble : styles.systemBubble]}>
+        <Text style={item.sender === 'user' ? styles.userText : styles.systemText}>{item.text}</Text>
+      </View>
     </View>
   );
 
@@ -203,8 +211,13 @@ export default function CreateTicket() {
           </TouchableOpacity>
         }
       />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
         <FlatList
+          style={styles.chatBg}
           ref={flatListRef}
           data={allMessages}
           keyExtractor={(m) => m.id}
@@ -399,23 +412,25 @@ export default function CreateTicket() {
         {/* Description input bar */}
         {step === 'description' && (
           <View style={styles.inputBar}>
-            <TextInput
-              value={inputText}
-              onChangeText={setInputText}
-              placeholder="Describe your IT issue..."
-              multiline
-              style={styles.chatInput}
-              mode="outlined"
-              outlineColor="#E5E7EB"
-              activeOutlineColor="#1B3A7A"
-              dense
-            />
+            <View style={[styles.inputWrap, inputFocused && styles.inputWrapFocused]}>
+              <TextInput
+                value={inputText}
+                onChangeText={setInputText}
+                placeholder="Describe your IT issue…"
+                placeholderTextColor="#9CA3AF"
+                multiline
+                style={styles.chatInput}
+                onFocus={() => setInputFocused(true)}
+                onBlur={() => setInputFocused(false)}
+              />
+            </View>
             <TouchableOpacity
               onPress={handleSend}
               disabled={!inputText.trim()}
-              style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled]}
+              style={[styles.sendBtn, inputText.trim() ? styles.sendBtnActive : styles.sendBtnIdle]}
+              activeOpacity={0.75}
             >
-              <Ionicons name="send" size={20} color="#fff" />
+              <Ionicons name="arrow-up" size={20} color="#fff" />
             </TouchableOpacity>
           </View>
         )}
@@ -425,28 +440,57 @@ export default function CreateTicket() {
 }
 
 const styles = StyleSheet.create({
+  chatBg: {
+    backgroundColor: '#EDF1F8',
+  },
   chatArea: {
-    padding: 16,
+    padding: 14,
     paddingBottom: 8,
+    gap: 2,
+  },
+
+  msgRowSystem: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 6,
+    marginBottom: 6,
+  },
+  msgRowUser: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: 6,
+  },
+  botAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#E0EAF6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    marginBottom: 2,
   },
   bubble: {
-    maxWidth: '80%',
-    borderRadius: 16,
-    padding: 12,
-    marginBottom: 8,
+    maxWidth: '78%',
+    borderRadius: 18,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.07,
+    shadowRadius: 3,
+    elevation: 1,
   },
   userBubble: {
     backgroundColor: '#1B3A7A',
-    alignSelf: 'flex-end',
     borderBottomRightRadius: 4,
   },
   systemBubble: {
-    backgroundColor: '#F3F4F6',
-    alignSelf: 'flex-start',
+    backgroundColor: '#fff',
     borderBottomLeftRadius: 4,
   },
-  userText: { color: '#fff', fontSize: 14 },
-  systemText: { color: '#374151', fontSize: 14 },
+  userText: { color: '#fff', fontSize: 14, lineHeight: 20 },
+  systemText: { color: '#374151', fontSize: 14, lineHeight: 20 },
 
   // Priority + category shared
   prioritySection: { marginVertical: 8 },
@@ -535,25 +579,47 @@ const styles = StyleSheet.create({
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: 8,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 14 : 12,
     backgroundColor: '#fff',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: '#F0F0F0',
     gap: 8,
   },
-  chatInput: {
+  inputWrap: {
     flex: 1,
-    maxHeight: 120,
-    backgroundColor: '#fff',
-    fontSize: 14,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'ios' ? 11 : 9,
+    paddingBottom: Platform.OS === 'ios' ? 11 : 9,
+    minHeight: 48,
+    maxHeight: 130,
+    justifyContent: 'center',
+  },
+  inputWrapFocused: {
+    borderColor: '#1B3A7A',
+  },
+  chatInput: {
+    fontSize: 15,
+    color: '#111827',
+    padding: 0,
+    margin: 0,
+    maxHeight: 108,
+    lineHeight: 21,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   sendBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1B3A7A',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendBtnDisabled: { backgroundColor: '#7BA3CE' },
+  sendBtnActive: { backgroundColor: '#1B3A7A' },
+  sendBtnIdle: { backgroundColor: '#D1D5DB' },
 });
