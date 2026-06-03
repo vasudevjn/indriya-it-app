@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { FlatList, View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { Text } from 'react-native-paper';
+import {
+  FlatList, View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, RefreshControl,
+} from 'react-native';
 import { Screen } from '../../components/common/Screen';
-import { AppHeader } from '../../components/common/AppHeader';
 import { TicketCard } from '../../components/tickets/TicketCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
 import { useTickets } from '../../hooks/useTickets';
-import { ALL_STATUSES, STATUS_LABELS, STATUS_COLORS } from '../../constants/ticket';
+import { ALL_STATUSES } from '../../constants/ticket';
 import { TicketStatus } from '../../types';
 import { useLocalSearchParams } from 'expo-router';
+import { theme } from '../../constants/theme';
 
 export default function TechnicianAllTickets() {
   const { initialStatus } = useLocalSearchParams<{ initialStatus?: string }>();
@@ -20,30 +22,42 @@ export default function TechnicianAllTickets() {
   useEffect(() => {
     setStatusFilter((initialStatus as TicketStatus) || undefined);
   }, [initialStatus]);
+
   const { data: tickets, isLoading, refetch } = useTickets({ status: statusFilter });
 
   const filters: (TicketStatus | undefined)[] = [undefined, ...ALL_STATUSES];
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="All Tickets" />
-      <View>
+    <Screen edges={['top', 'left', 'right']} style={styles.screen}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>All Tickets</Text>
+      </View>
+
+      {/* Chips bar — plain View wrapper prevents horizontal ScrollView from stretching */}
+      <View style={styles.chipsBar}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.chips}
+          contentContainerStyle={styles.chipsContainer}
         >
           {filters.map((s) => {
             const active = statusFilter === s;
-            const color = s ? STATUS_COLORS[s] : '#1B3A7A';
+            const chipColor = s ? theme.statusColors[s].accent : theme.colors.textSecondary;
             return (
               <TouchableOpacity
                 key={s ?? 'all'}
-                style={[styles.chip, active && { backgroundColor: color, borderColor: color }]}
+                style={[
+                  styles.chip,
+                  active
+                    ? { backgroundColor: theme.colors.brand, borderColor: theme.colors.brand }
+                    : { backgroundColor: theme.colors.surface, borderColor: chipColor },
+                ]}
                 onPress={() => setStatusFilter(s)}
+                activeOpacity={0.7}
               >
-                <Text style={[styles.chipText, active && styles.chipTextActive, !active && { color }]}>
-                  {s ? STATUS_LABELS[s] : 'All'}
+                <Text style={[styles.chipText, { color: active ? '#fff' : chipColor }]}>
+                  {s ? theme.statusLabels[s] : 'All'}
                 </Text>
               </TouchableOpacity>
             );
@@ -51,6 +65,7 @@ export default function TechnicianAllTickets() {
         </ScrollView>
       </View>
 
+      {/* Ticket list */}
       {isLoading ? (
         <LoadingOverlay />
       ) : (
@@ -59,6 +74,7 @@ export default function TechnicianAllTickets() {
           keyExtractor={(t) => t.id}
           renderItem={({ item }) => <TicketCard ticket={item} />}
           contentContainerStyle={styles.list}
+          style={styles.flatList}
           refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
           ListEmptyComponent={<EmptyState icon="ticket-outline" title="No tickets found" />}
         />
@@ -68,29 +84,45 @@ export default function TechnicianAllTickets() {
 }
 
 const styles = StyleSheet.create({
-  chips: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
+  screen: {
+    backgroundColor: theme.colors.brand,
+  },
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  chipsBar: {
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  chipsContainer: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.sm,
+    alignItems: 'center',
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
   },
   chipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9CA3AF',
   },
-  chipTextActive: {
-    color: '#fff',
+  flatList: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
   },
   list: {
-    paddingVertical: 8,
-    paddingBottom: 24,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.xxl,
   },
 });

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { FlatList, View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { Text } from 'react-native-paper';
+import {
+  FlatList, View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, RefreshControl,
+} from 'react-native';
 import { Screen } from '../../components/common/Screen';
-import { AppHeader } from '../../components/common/AppHeader';
 import { TicketCard } from '../../components/tickets/TicketCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
@@ -12,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { getStores } from '../../lib/api/stores';
 import { DbStore } from '../../types';
+import { theme } from '../../constants/theme';
 
 export default function TechnicianQueue() {
   useRealtimeTickets();
@@ -29,41 +31,73 @@ export default function TechnicianQueue() {
   if (isLoading) return <LoadingOverlay />;
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Ticket Queue" />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chips}
-      >
-        <TouchableOpacity
-          style={[styles.chip, storeFilter === undefined && styles.chipActive]}
-          onPress={() => setStoreFilter(undefined)}
-        >
-          <Text style={[styles.chipText, storeFilter === undefined && styles.chipTextActive]}>All Stores</Text>
-        </TouchableOpacity>
-        {(stores ?? []).map((s: DbStore) => (
-          <TouchableOpacity
-            key={s.id}
-            style={[styles.chip, storeFilter === s.id && styles.chipActive]}
-            onPress={() => setStoreFilter(storeFilter === s.id ? undefined : s.id)}
-          >
-            <Text style={[styles.chipText, storeFilter === s.id && styles.chipTextActive]}>{s.code}</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+    <Screen edges={['top', 'left', 'right']} style={styles.screen}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>Ticket Queue</Text>
+      </View>
 
+      {/* Chips bar — plain View wrapper prevents horizontal ScrollView from stretching */}
+      <View style={styles.chipsBar}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipsContainer}
+        >
+          <TouchableOpacity
+            style={[
+              styles.chip,
+              storeFilter === undefined
+                ? { backgroundColor: theme.colors.brand, borderColor: theme.colors.brand }
+                : { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderStrong },
+            ]}
+            onPress={() => setStoreFilter(undefined)}
+            activeOpacity={0.7}
+          >
+            <Text style={[
+              styles.chipText,
+              { color: storeFilter === undefined ? '#fff' : theme.colors.textSecondary },
+            ]}>
+              All Stores
+            </Text>
+          </TouchableOpacity>
+
+          {(stores ?? []).map((s: DbStore) => {
+            const active = storeFilter === s.id;
+            return (
+              <TouchableOpacity
+                key={s.id}
+                style={[
+                  styles.chip,
+                  active
+                    ? { backgroundColor: theme.colors.brand, borderColor: theme.colors.brand }
+                    : { backgroundColor: theme.colors.surface, borderColor: theme.colors.borderStrong },
+                ]}
+                onPress={() => setStoreFilter(storeFilter === s.id ? undefined : s.id)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, { color: active ? '#fff' : theme.colors.textSecondary }]}>
+                  {s.code}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* Ticket list */}
       <FlatList
         data={tickets}
         keyExtractor={(t) => t.id}
         renderItem={({ item }) => <TicketCard ticket={item} />}
         contentContainerStyle={styles.list}
+        style={styles.flatList}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={() => { refetchOpen(); refetchIP(); }}
-            tintColor="#1B3A7A"
-            colors={['#1B3A7A']}
+            tintColor={theme.colors.brand}
+            colors={[theme.colors.brand]}
           />
         }
         ListEmptyComponent={
@@ -79,33 +113,45 @@ export default function TechnicianQueue() {
 }
 
 const styles = StyleSheet.create({
-  chips: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    gap: 8,
+  screen: {
+    backgroundColor: theme.colors.brand,
+  },
+  header: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  chipsBar: {
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  chipsContainer: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.sm,
+    alignItems: 'center',
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.radius.full,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#fff',
-  },
-  chipActive: {
-    backgroundColor: '#1B3A7A',
-    borderColor: '#1B3A7A',
   },
   chipText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#9CA3AF',
   },
-  chipTextActive: {
-    color: '#fff',
+  flatList: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
   },
   list: {
-    paddingVertical: 8,
-    paddingBottom: 24,
+    paddingTop: theme.spacing.sm,
+    paddingBottom: theme.spacing.xxl,
   },
 });

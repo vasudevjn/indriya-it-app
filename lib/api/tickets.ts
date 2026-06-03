@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '../supabase';
 import { DbTicket, TicketStatus, TicketPriority, DbTicketAttachment } from '../../types';
 import { TicketWithRelations } from '../../types/ticket';

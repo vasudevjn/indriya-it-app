@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { theme } from '../../constants/theme';
 
 export default function RequesterLayout() {
   const unreadCount = useNotificationStore((s) => s.unreadCount);
@@ -9,9 +10,9 @@ export default function RequesterLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1B3A7A',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarStyle: { borderTopColor: '#E5E7EB', paddingBottom: 8, height: 60 },
+        tabBarActiveTintColor: theme.colors.brand,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
+        tabBarStyle: { borderTopColor: theme.colors.border, paddingBottom: theme.spacing.sm, height: 60 },
       }}
     >
       <Tabs.Screen

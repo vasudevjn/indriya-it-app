@@ -1,8 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Text } from 'react-native-paper';
+import { StyleSheet, Text, View } from 'react-native';
 import { TicketStatus } from '../../types';
-import { STATUS_COLORS, STATUS_LABELS } from '../../constants/ticket';
+import { theme } from '../../constants/theme';
 
 interface Props {
   status: TicketStatus;
@@ -10,11 +9,11 @@ interface Props {
 }
 
 export function StatusChip({ status, small = false }: Props) {
-  const color = STATUS_COLORS[status];
+  const colors = theme.statusColors[status];
   return (
-    <View style={[styles.chip, { backgroundColor: color + '20', borderColor: color }, small && styles.small]}>
-      <Text style={[styles.label, { color }, small && styles.smallText]}>
-        {STATUS_LABELS[status]}
+    <View style={[styles.chip, { backgroundColor: colors.bg }, small && styles.small]}>
+      <Text style={[styles.label, { color: colors.text }, small && styles.smallText]}>
+        {theme.statusLabels[status]}
       </Text>
     </View>
   );
@@ -22,14 +21,13 @@ export function StatusChip({ status, small = false }: Props) {
 
 const styles = StyleSheet.create({
   chip: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
+    borderRadius: theme.radius.full,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
     alignSelf: 'flex-start',
   },
   small: {
-    paddingHorizontal: 6,
+    paddingHorizontal: theme.spacing.sm,
     paddingVertical: 2,
   },
   label: {
