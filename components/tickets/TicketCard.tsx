@@ -81,26 +81,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
     marginBottom: theme.spacing.sm,
   },
-  bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  assigneeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  avatarDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: theme.colors.brandMid,
-  },
-  assigneeName: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-  },
   timeAgo: {
     fontSize: 12,
     color: theme.colors.textTertiary,

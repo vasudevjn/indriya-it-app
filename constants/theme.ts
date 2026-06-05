@@ -31,6 +31,11 @@ export const theme = {
     textTertiary: '#9AAABB',
     border: '#E8ECF2',
     borderStrong: '#D1D9E6',
+    error: '#EF4444',
+    errorBg: '#FEE2E2',
+    errorLight: '#FEF2F2',
+    errorBorder: '#FECACA',
+    errorStrong: '#DC2626',
   },
   statusColors: {
     open: { text: '#2563EB', bg: '#EFF6FF', accent: '#2563EB' },

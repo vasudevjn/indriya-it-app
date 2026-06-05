@@ -7,6 +7,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { useTickets } from '../../hooks/useTickets';
+import { theme } from '../../constants/theme';
 
 export default function MyTickets() {
   const { profile } = useCurrentUser();
@@ -16,13 +17,20 @@ export default function MyTickets() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="My Assigned Tickets" />
+      <AppHeader title="My assigned tickets" />
       <FlatList
         data={tickets ?? []}
         keyExtractor={(t) => t.id}
         renderItem={({ item }) => <TicketCard ticket={item} />}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refetch}
+            tintColor={theme.colors.brand}
+            colors={[theme.colors.brand]}
+          />
+        }
         ListEmptyComponent={
           <EmptyState
             icon="person-outline"
@@ -37,7 +45,7 @@ export default function MyTickets() {
 
 const styles = StyleSheet.create({
   list: {
-    paddingVertical: 8,
-    paddingBottom: 24,
+    paddingVertical: theme.spacing.sm,
+    paddingBottom: theme.spacing.xxl,
   },
 });

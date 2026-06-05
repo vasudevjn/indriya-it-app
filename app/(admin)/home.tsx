@@ -1,42 +1,40 @@
 import React, { useCallback, useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
-import { Text, Card } from 'react-native-paper';
+import {
+  View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity,
+} from 'react-native';
 import { router } from 'expo-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen } from '../../components/common/Screen';
-import { AppHeader } from '../../components/common/AppHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GoldRateCard } from '../../components/home/GoldRateCard';
-import { ProfileIconButton } from '../../components/common/ProfileIconButton';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { getPendingTechnicians } from '../../lib/api/profiles';
+import { theme } from '../../constants/theme';
 
-interface ActionCardProps {
-  icon: string;
-  label: string;
+interface ActionRowProps {
+  iconName: string;
+  iconColor: string;
+  iconBg: string;
+  title: string;
   subtitle: string;
-  badge?: number;
-  color: string;
+  subtitleColor: string;
   onPress: () => void;
 }
 
-function ActionCard({ icon, label, subtitle, badge, color, onPress }: ActionCardProps) {
+function ActionRow({
+  iconName, iconColor, iconBg, title, subtitle, subtitleColor, onPress,
+}: ActionRowProps) {
   return (
-    <TouchableOpacity style={styles.actionCard} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.actionIcon, { backgroundColor: color + '18' }]}>
-        <Ionicons name={icon as keyof typeof Ionicons.glyphMap} size={24} color={color} />
-        {badge !== undefined && badge > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
-          </View>
-        )}
+    <TouchableOpacity style={styles.actionRow} onPress={onPress} activeOpacity={0.8}>
+      <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
+        <Ionicons name={iconName as keyof typeof Ionicons.glyphMap} size={22} color={iconColor} />
       </View>
       <View style={styles.actionText}>
-        <Text variant="labelLarge" style={styles.actionLabel}>{label}</Text>
-        <Text variant="bodySmall" style={styles.actionSubtitle}>{subtitle}</Text>
+        <Text style={styles.actionTitle}>{title}</Text>
+        <Text style={[styles.actionSubtitle, { color: subtitleColor }]}>{subtitle}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+      <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
     </TouchableOpacity>
   );
 }
@@ -44,6 +42,7 @@ function ActionCard({ icon, label, subtitle, badge, color, onPress }: ActionCard
 export default function AdminHome() {
   const { profile } = useCurrentUser();
   const qc = useQueryClient();
+  const insets = useSafeAreaInsets();
 
   const { data: pending, refetch: refetchPending } = useQuery({
     queryKey: QUERY_KEYS.pendingTechnicians(),
@@ -62,111 +61,157 @@ export default function AdminHome() {
   }, [refetchPending, qc]);
 
   const pendingCount = pending?.length ?? 0;
+  const firstName    = profile?.full_name?.split(' ')[0] ?? '';
+  const initial      = firstName.charAt(0).toUpperCase();
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader
-        title="Admin"
-        right={profile ? <ProfileIconButton profile={profile} /> : undefined}
-      />
+    <View style={styles.root}>
+      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.md }]}>
+        <View style={styles.headerLeft}>
+          <Text style={styles.appName}>ADMIN</Text>
+          <Text style={styles.greeting}>Hello, {firstName}</Text>
+        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/(admin)/profile' as never)}
+          activeOpacity={0.8}
+        >
+          <View style={styles.avatar}>
+            <Text style={styles.avatarInitial}>{initial}</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       <ScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={styles.body}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            tintColor="#1B3A7A"
-            colors={['#1B3A7A']}
+            tintColor={theme.colors.brand}
+            colors={[theme.colors.brand]}
           />
         }
       >
-        <Text variant="headlineSmall" style={styles.greeting}>
-          Hello, {profile?.full_name?.split(' ')[0]}
-        </Text>
-
-        {/* Gold Rate */}
         <GoldRateCard />
 
-        {/* Quick Actions */}
-        <Text variant="labelMedium" style={styles.sectionLabel}>Quick Actions</Text>
-        <Card style={styles.actionsCard} mode="outlined">
-          <ActionCard
-            icon="person-add-outline"
-            label="Approvals"
+        <Text style={styles.sectionLabel}>Quick actions</Text>
+
+        <View style={[styles.actionsCard, theme.shadows.sm]}>
+          <ActionRow
+            iconName="person-add-outline"
+            iconColor={theme.colors.brand}
+            iconBg={theme.colors.bg}
+            title="Approvals"
             subtitle={
               pendingCount > 0
-                ? `${pendingCount} pending technician request${pendingCount !== 1 ? 's' : ''}`
+                ? `${pendingCount} pending request${pendingCount !== 1 ? 's' : ''}`
                 : 'No pending requests'
             }
-            badge={pendingCount}
-            color="#1B3A7A"
+            subtitleColor={pendingCount > 0 ? theme.colors.accent : theme.colors.textTertiary}
             onPress={() => router.push('/(admin)/approvals')}
           />
-          <View style={styles.cardDivider} />
-          <ActionCard
-            icon="megaphone-outline"
-            label="Publish Announcement"
+          <View style={styles.rowDivider} />
+          <ActionRow
+            iconName="megaphone-outline"
+            iconColor={theme.colors.accent}
+            iconBg={theme.colors.accent + '26'}
+            title="Publish announcement"
             subtitle="Send broadcast or update gold rate"
-            color="#D97706"
+            subtitleColor={theme.colors.textTertiary}
             onPress={() => router.push('/(admin)/broadcasts')}
           />
-          <View style={styles.cardDivider} />
-          <ActionCard
-            icon="grid-outline"
-            label="All Tickets"
-            subtitle="View and manage all IT tickets"
-            color="#6B7280"
-            onPress={() => router.push('/(admin)/all-tickets')}
-          />
-        </Card>
+        </View>
       </ScrollView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { padding: 16, paddingBottom: 32 },
-  greeting: { fontWeight: '700', color: '#111827', marginBottom: 20 },
+  root: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+  header: {
+    backgroundColor: theme.colors.brand,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerLeft: {
+    gap: theme.spacing.xs,
+  },
+  appName: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.5,
+  },
+  greeting: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  avatarInitial: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  body: {
+    padding: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxl * 2,
+  },
   sectionLabel: {
-    color: '#6B7280',
+    color: theme.colors.textTertiary,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     fontSize: 11,
-    marginBottom: 10,
+    marginBottom: theme.spacing.sm,
   },
-  actionsCard: { backgroundColor: '#fff', overflow: 'hidden' },
-  actionCard: {
+  actionsCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  actionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    gap: 14,
+    padding: theme.spacing.md,
+    gap: theme.spacing.md,
   },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  iconBox: {
+    padding: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    position: 'relative',
   },
-  actionText: { flex: 1, gap: 2 },
-  actionLabel: { color: '#111827', fontWeight: '700' },
-  actionSubtitle: { color: '#6B7280' },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#EF4444',
-    borderRadius: 10,
-    minWidth: 18,
-    height: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-    borderWidth: 1.5,
-    borderColor: '#fff',
+  actionText: {
+    flex: 1,
+    gap: theme.spacing.xs,
   },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  cardDivider: { height: 1, backgroundColor: '#F3F4F6', marginLeft: 78 },
+  actionTitle: {
+    color: theme.colors.textPrimary,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  actionSubtitle: {
+    fontSize: 12,
+  },
+  rowDivider: {
+    height: 1,
+    backgroundColor: theme.colors.border,
+  },
 });

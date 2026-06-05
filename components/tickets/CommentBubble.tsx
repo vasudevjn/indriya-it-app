@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text } from 'react-native-paper';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CommentWithAuthor } from '../../types/ticket';
 import { timeAgo } from '../../lib/utils/date';
+import { theme } from '../../constants/theme';
 
 interface Props {
   comment: CommentWithAuthor;
@@ -19,38 +19,49 @@ export function CommentBubble({ comment, isOwnComment }: Props) {
     .slice(0, 2)
     .toUpperCase();
 
+  const avatarEl = (
+    <View
+      style={[
+        styles.avatar,
+        isOwnComment ? styles.avatarOwn : styles.avatarOther,
+        isInternal && !isOwnComment && styles.avatarInternal,
+      ]}
+    >
+      <Text style={styles.avatarText}>{initials}</Text>
+    </View>
+  );
+
   return (
     <View style={[styles.row, isOwnComment ? styles.rowRight : styles.rowLeft]}>
-      {/* Avatar — only for other people's messages */}
-      {!isOwnComment && (
-        <View style={[styles.avatar, isInternal && styles.avatarInternal]}>
-          <Text style={styles.avatarText}>{initials}</Text>
-        </View>
-      )}
+      {!isOwnComment && avatarEl}
 
       <View
         style={[
           styles.bubble,
           isOwnComment ? styles.bubbleOwn : styles.bubbleOther,
-          isInternal && styles.bubbleInternal,
+          isInternal && !isOwnComment && styles.bubbleInternal,
+          isInternal && isOwnComment && styles.bubbleOwnInternal,
         ]}
       >
-        {/* Author name */}
         <View style={styles.authorRow}>
           {isInternal && (
-            <Ionicons name="lock-closed" size={11} color={isOwnComment ? 'rgba(255,255,255,0.6)' : '#8B5CF6'} />
+            <Ionicons
+              name="lock-closed"
+              size={11}
+              color={isOwnComment ? 'rgba(255,255,255,0.6)' : '#8B5CF6'}
+            />
           )}
           <Text style={[styles.author, isOwnComment ? styles.authorOwn : styles.authorOther]}>
             {isOwnComment ? 'You' : (comment.author?.full_name ?? 'Unknown')}
           </Text>
         </View>
 
-        {/* Message body */}
         <Text style={[styles.body, isOwnComment && styles.bodyOwn]}>{comment.body}</Text>
 
-        {/* Timestamp */}
         <Text style={[styles.time, isOwnComment && styles.timeOwn]}>{timeAgo(comment.created_at)}</Text>
       </View>
+
+      {isOwnComment && avatarEl}
     </View>
   );
 }
@@ -58,10 +69,10 @@ export function CommentBubble({ comment, isOwnComment }: Props) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    marginHorizontal: 12,
-    marginVertical: 3,
+    marginHorizontal: theme.spacing.md,
+    marginVertical: theme.spacing.xs - 1,
     alignItems: 'flex-end',
-    gap: 6,
+    gap: theme.spacing.sm - 2,
   },
   rowLeft: {
     justifyContent: 'flex-start',
@@ -73,12 +84,17 @@ const styles = StyleSheet.create({
   avatar: {
     width: 28,
     height: 28,
-    borderRadius: 14,
-    backgroundColor: '#E0EAF6',
+    borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
     marginBottom: 2,
+  },
+  avatarOther: {
+    backgroundColor: theme.colors.brand,
+  },
+  avatarOwn: {
+    backgroundColor: theme.colors.accent,
   },
   avatarInternal: {
     backgroundColor: '#EDE9FE',
@@ -86,47 +102,51 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 10,
     fontWeight: '700',
-    color: '#1B3A7A',
+    color: '#fff',
   },
 
   bubble: {
     maxWidth: '75%',
-    borderRadius: 18,
-    paddingHorizontal: 13,
-    paddingVertical: 9,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    paddingHorizontal: theme.spacing.md + 1,
+    paddingVertical: theme.spacing.sm + 1,
+    ...theme.shadows.sm,
   },
   bubbleOther: {
-    backgroundColor: '#fff',
-    borderBottomLeftRadius: 4,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 10,
+    borderBottomLeftRadius: 3,
   },
   bubbleOwn: {
-    backgroundColor: '#1B3A7A',
-    borderBottomRightRadius: 4,
+    backgroundColor: theme.colors.brand,
+    borderRadius: 10,
+    borderBottomRightRadius: 3,
   },
   bubbleInternal: {
     backgroundColor: '#F5F0FF',
     borderWidth: 1,
     borderColor: '#C4B5FD',
-    borderBottomLeftRadius: 4,
+    borderRadius: 10,
+    borderBottomLeftRadius: 3,
+    opacity: 0.92,
+  },
+  bubbleOwnInternal: {
+    opacity: 0.88,
   },
 
   authorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 3,
-    marginBottom: 3,
+    gap: theme.spacing.xs - 1,
+    marginBottom: theme.spacing.xs - 1,
   },
   author: {
     fontSize: 11,
     fontWeight: '700',
   },
   authorOther: {
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
   },
   authorOwn: {
     color: 'rgba(255,255,255,0.65)',
@@ -134,7 +154,7 @@ const styles = StyleSheet.create({
 
   body: {
     fontSize: 14,
-    color: '#111827',
+    color: theme.colors.textPrimary,
     lineHeight: 20,
   },
   bodyOwn: {
@@ -143,8 +163,8 @@ const styles = StyleSheet.create({
 
   time: {
     fontSize: 10,
-    color: '#9CA3AF',
-    marginTop: 4,
+    color: theme.colors.textTertiary,
+    marginTop: theme.spacing.xs,
     textAlign: 'right',
   },
   timeOwn: {

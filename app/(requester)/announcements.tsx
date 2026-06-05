@@ -11,20 +11,21 @@ import { QUERY_KEYS } from '../../constants/queryKeys';
 import { getBroadcasts } from '../../lib/api/broadcasts';
 import { formatDateTime } from '../../lib/utils/date';
 import { DbBroadcast } from '../../types';
+import { theme } from '../../constants/theme';
 
 function AnnouncementCard({ item }: { item: DbBroadcast }) {
   return (
     <Card style={styles.card} mode="outlined">
       <Card.Content style={styles.cardContent}>
         <View style={styles.iconWrap}>
-          <Ionicons name="megaphone" size={20} color="#C9A46A" />
+          <Ionicons name="megaphone" size={20} color={theme.colors.accent} />
         </View>
         <View style={styles.textBlock}>
           <Text variant="labelLarge" style={styles.title}>{item.title}</Text>
           <Text variant="bodySmall" style={styles.body}>{item.body}</Text>
           <Text variant="labelSmall" style={styles.date}>
             {formatDateTime(item.created_at)}
-            {item.target_store_id ? ' - Your store' : ' - All stores'}
+            {item.target_store_id ? ' · Your store' : ' · All stores'}
           </Text>
         </View>
       </Card.Content>
@@ -58,8 +59,8 @@ export default function RequesterAnnouncements() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={refetch}
-            tintColor="#1B3A7A"
-            colors={['#1B3A7A']}
+            tintColor={theme.colors.brand}
+            colors={[theme.colors.brand]}
           />
         }
         ListEmptyComponent={
@@ -76,44 +77,46 @@ export default function RequesterAnnouncements() {
 
 const styles = StyleSheet.create({
   list: {
-    paddingVertical: 8,
-    paddingBottom: 32,
-    paddingHorizontal: 16,
+    paddingVertical: theme.spacing.sm,
+    paddingBottom: theme.spacing.lg * 2,
+    paddingHorizontal: theme.spacing.lg,
   },
   card: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FDE68A',
-    marginBottom: 10,
+    backgroundColor: theme.statusColors.in_progress.bg,
+    borderColor: theme.colors.accent,
+    marginBottom: theme.spacing.md,
   },
   cardContent: {
     flexDirection: 'row',
-    gap: 12,
+    gap: theme.spacing.md,
     alignItems: 'flex-start',
-    paddingVertical: 4,
+    paddingVertical: theme.spacing.xs,
   },
   iconWrap: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FEF3C7',
+    borderRadius: theme.radius.full,
+    backgroundColor: theme.statusColors.in_progress.bg,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 2,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   textBlock: {
     flex: 1,
-    gap: 4,
+    gap: theme.spacing.xs,
   },
   title: {
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.textPrimary,
   },
   body: {
-    color: '#374151',
+    color: theme.colors.textSecondary,
     lineHeight: 18,
   },
   date: {
-    color: '#9CA3AF',
-    marginTop: 2,
+    color: theme.colors.textTertiary,
+    marginTop: theme.spacing.xs - 2,
   },
 });

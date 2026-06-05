@@ -1,8 +1,9 @@
 import React from 'react';
-import { FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { FlatList, View, Text, TouchableOpacity, StyleSheet, RefreshControl } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Screen } from '../../components/common/Screen';
-import { AppHeader } from '../../components/common/AppHeader';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TechnicianApprovalCard } from '../../components/admin/TechnicianApprovalCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
@@ -11,10 +12,12 @@ import { getPendingTechnicians, updateApprovalStatus } from '../../lib/api/profi
 import { createNotification } from '../../lib/api/notifications';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { useUiStore } from '../../stores/uiStore';
+import { theme } from '../../constants/theme';
 
 export default function AdminApprovals() {
   const qc = useQueryClient();
   const showToast = useUiStore((s) => s.showToast);
+  const insets = useSafeAreaInsets();
   const { data: pending, isLoading, refetch } = useQuery({
     queryKey: QUERY_KEYS.pendingTechnicians(),
     queryFn: getPendingTechnicians,
@@ -25,7 +28,7 @@ export default function AdminApprovals() {
       await updateApprovalStatus(techId, 'approved');
       await createNotification({
         recipient_id: techId,
-        title: 'Account Approved',
+        title: 'Account approved',
         body: 'Your technician account has been approved. You can now log in.',
         type: 'ticket_updated',
       });
@@ -42,7 +45,7 @@ export default function AdminApprovals() {
       await updateApprovalStatus(techId, 'rejected');
       await createNotification({
         recipient_id: techId,
-        title: 'Account Rejected',
+        title: 'Account rejected',
         body: 'Your technician account application was not approved.',
         type: 'ticket_updated',
       });
@@ -57,8 +60,16 @@ export default function AdminApprovals() {
   if (isLoading) return <LoadingOverlay />;
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Pending Approvals" />
+    <View style={styles.root}>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
+          <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.6)" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Pending approvals</Text>
+      </View>
+
       <FlatList
         data={pending ?? []}
         keyExtractor={(p) => p.id}
@@ -71,7 +82,14 @@ export default function AdminApprovals() {
           />
         )}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refetch}
+            tintColor={theme.colors.brand}
+            colors={[theme.colors.brand]}
+          />
+        }
         ListEmptyComponent={
           <EmptyState
             icon="checkmark-circle-outline"
@@ -80,13 +98,38 @@ export default function AdminApprovals() {
           />
         }
       />
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+  header: {
+    backgroundColor: theme.colors.brand,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.xs,
+  },
+  backText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+  },
   list: {
-    paddingVertical: 8,
-    paddingBottom: 24,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.xxl,
   },
 });

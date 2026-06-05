@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  Animated,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -25,8 +26,22 @@ export default function Login() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
+  const emailAnim = useRef(new Animated.Value(0)).current;
+  const passwordAnim = useRef(new Animated.Value(0)).current;
+
+  const animateFocus = (anim: Animated.Value) =>
+    Animated.timing(anim, { toValue: 1, duration: 150, useNativeDriver: false }).start();
+  const animateBlur = (anim: Animated.Value) =>
+    Animated.timing(anim, { toValue: 0, duration: 150, useNativeDriver: false }).start();
+
+  const emailBorderColor = emailAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [theme.colors.border, theme.colors.brand],
+  });
+  const passwordBorderColor = passwordAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [theme.colors.border, theme.colors.brand],
+  });
 
   const handleLogin = async () => {
     setError('');
@@ -39,9 +54,9 @@ export default function Login() {
   };
 
   return (
-    <Screen style={styles.screen}>
+    <Screen edges={['top', 'left', 'right']} style={styles.screen}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="always">
 
           {/* Hero Section */}
           <View style={styles.hero}>
@@ -62,7 +77,7 @@ export default function Login() {
 
             {/* Email */}
             <Text style={styles.fieldLabel}>EMAIL</Text>
-            <View style={[styles.inputWrapper, emailFocused ? styles.inputWrapperFocused : null]}>
+            <Animated.View style={[styles.inputWrapper, { borderColor: emailBorderColor }]}>
               <MaterialCommunityIcons
                 name="email-outline"
                 size={20}
@@ -75,16 +90,18 @@ export default function Login() {
                 onChangeText={setEmail}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete="email"
                 placeholder="your@email.com"
                 placeholderTextColor={theme.colors.textTertiary}
-                onFocus={() => setEmailFocused(true)}
-                onBlur={() => setEmailFocused(false)}
+                onFocus={() => animateFocus(emailAnim)}
+                onBlur={() => animateBlur(emailAnim)}
               />
-            </View>
+            </Animated.View>
 
             {/* Password */}
             <Text style={[styles.fieldLabel, styles.fieldLabelSpaced]}>PASSWORD</Text>
-            <View style={[styles.inputWrapper, passwordFocused ? styles.inputWrapperFocused : null]}>
+            <Animated.View style={[styles.inputWrapper, { borderColor: passwordBorderColor }]}>
               <MaterialCommunityIcons
                 name="lock-outline"
                 size={20}
@@ -96,10 +113,12 @@ export default function Login() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPass}
+                autoCorrect={false}
+                autoComplete="password"
                 placeholder="••••••••"
                 placeholderTextColor={theme.colors.textTertiary}
-                onFocus={() => setPasswordFocused(true)}
-                onBlur={() => setPasswordFocused(false)}
+                onFocus={() => animateFocus(passwordAnim)}
+                onBlur={() => animateBlur(passwordAnim)}
               />
               <TouchableOpacity
                 onPress={() => setShowPass(v => !v)}
@@ -112,7 +131,7 @@ export default function Login() {
                   color={theme.colors.textSecondary}
                 />
               </TouchableOpacity>
-            </View>
+            </Animated.View>
 
             {/* Sign In */}
             <TouchableOpacity
@@ -244,15 +263,6 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     paddingHorizontal: theme.spacing.md,
     height: 50,
-  },
-  inputWrapperFocused: {
-    backgroundColor: theme.colors.surface,
-    borderColor: theme.colors.brand,
-    shadowColor: '#0F1C2E',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
   },
   inputIcon: {
     marginRight: theme.spacing.sm,

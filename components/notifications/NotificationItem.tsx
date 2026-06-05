@@ -1,10 +1,10 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text } from 'react-native-paper';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DbNotification } from '../../types';
 import { timeAgo } from '../../lib/utils/date';
 import { router } from 'expo-router';
+import { theme } from '../../constants/theme';
 
 interface Props {
   notification: DbNotification;
@@ -22,82 +22,120 @@ export function NotificationItem({ notification, onRead }: Props) {
   };
 
   const broadcast = isBroadcast(notification);
+  const isUnread = !notification.is_read && !broadcast;
 
   return (
     <TouchableOpacity
       onPress={handlePress}
+      activeOpacity={notification.ticket_id ? 0.7 : 1}
       style={[
-        styles.container,
-        !notification.is_read && styles.unread,
-        broadcast && styles.broadcastBg,
+        styles.card,
+        isUnread ? styles.cardUnread : styles.cardRead,
+        broadcast && styles.cardBroadcast,
       ]}
     >
-      <View style={[styles.iconWrap, broadcast && styles.broadcastIcon]}>
+      <View style={[styles.iconBox, broadcast ? styles.iconBoxBroadcast : styles.iconBoxTicket]}>
         <Ionicons
           name={broadcast ? 'megaphone' : 'notifications'}
           size={20}
-          color={broadcast ? '#C9A46A' : '#1B3A7A'}
+          color={broadcast ? '#C9A84C' : theme.colors.brand}
         />
       </View>
+
       <View style={styles.content}>
-        <Text variant="labelMedium" style={styles.title}>{notification.title}</Text>
+        <Text style={[styles.title, broadcast && styles.titleBroadcast]}>
+          {notification.title}
+        </Text>
         {notification.body ? (
-          <Text variant="bodySmall" style={styles.body} numberOfLines={2}>{notification.body}</Text>
+          <Text style={[styles.body, broadcast && styles.bodyBroadcast]} numberOfLines={2}>
+            {notification.body}
+          </Text>
         ) : null}
-        <Text variant="labelSmall" style={styles.time}>{timeAgo(notification.created_at)}</Text>
+        <Text style={[styles.time, broadcast && styles.timeBroadcast]}>
+          {timeAgo(notification.created_at)}
+        </Text>
       </View>
-      {!notification.is_read && <View style={styles.dot} />}
+
+      {isUnread && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-    gap: 12,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+    ...theme.shadows.sm,
   },
-  unread: {
-    backgroundColor: '#EBF2FC',
+  cardRead: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.border,
   },
-  broadcastBg: {
-    backgroundColor: '#FFFBEB',
+  cardUnread: {
+    backgroundColor: '#F0F5FF',
+    borderColor: '#C7D9F5',
   },
-  iconWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E0EAF6',
+  cardBroadcast: {
+    backgroundColor: '#1E3A5F',
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+
+  iconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: theme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
   },
-  broadcastIcon: {
-    backgroundColor: '#FEF3C7',
+  iconBoxTicket: {
+    backgroundColor: '#EFF6FF',
   },
+  iconBoxBroadcast: {
+    backgroundColor: 'rgba(201,168,76,0.12)',
+  },
+
   content: {
     flex: 1,
-    gap: 2,
+    gap: theme.spacing.xs - 1,
   },
   title: {
-    color: '#111827',
-    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    fontWeight: '700',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  titleBroadcast: {
+    color: '#fff',
   },
   body: {
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  bodyBroadcast: {
+    color: 'rgba(255,255,255,0.6)',
   },
   time: {
-    color: '#9CA3AF',
-    marginTop: 2,
+    color: theme.colors.textTertiary,
+    fontSize: 11,
+    marginTop: theme.spacing.xs,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#1B3A7A',
-    marginTop: 4,
+  timeBroadcast: {
+    color: 'rgba(255,255,255,0.35)',
+  },
+
+  unreadDot: {
+    position: 'absolute',
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    width: 7,
+    height: 7,
+    borderRadius: theme.radius.full,
+    backgroundColor: '#2563EB',
   },
 });

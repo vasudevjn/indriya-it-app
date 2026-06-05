@@ -39,7 +39,7 @@ export default function RequesterLayout() {
       />
 
       {/* Hidden from tab bar -- still navigatable */}
-      <Tabs.Screen name="profile"        options={{ href: null }} />
+      <Tabs.Screen name="profile"        options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="open-tickets"   options={{ href: null }} />
       <Tabs.Screen name="announcements"  options={{ href: null }} />
     </Tabs>

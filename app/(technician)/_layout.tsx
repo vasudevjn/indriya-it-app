@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { theme } from '../../constants/theme';
 
 export default function TechnicianLayout() {
   const unreadCount = useNotificationStore((s) => s.unreadCount);
@@ -9,9 +10,13 @@ export default function TechnicianLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1B3A7A',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarStyle: { borderTopColor: '#E5E7EB', paddingBottom: 8, height: 60 },
+        tabBarActiveTintColor: theme.colors.brand,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
+        tabBarStyle: {
+          borderTopColor: theme.colors.border,
+          paddingBottom: theme.spacing.sm,
+          height: 60,
+        },
       }}
     >
       <Tabs.Screen
@@ -24,7 +29,7 @@ export default function TechnicianLayout() {
       <Tabs.Screen
         name="all-tickets"
         options={{
-          title: 'All Tickets',
+          title: 'All tickets',
           tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
         }}
       />
@@ -38,7 +43,7 @@ export default function TechnicianLayout() {
       />
 
       {/* Hidden from tab bar */}
-      <Tabs.Screen name="profile"    options={{ href: null }} />
+      <Tabs.Screen name="profile"    options={{ href: null, tabBarStyle: { display: 'none' } }} />
       <Tabs.Screen name="queue"      options={{ href: null }} />
       <Tabs.Screen name="my-tickets" options={{ href: null }} />
     </Tabs>

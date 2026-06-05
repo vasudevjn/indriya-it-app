@@ -1,6 +1,7 @@
 import React from 'react';
 import { Appbar } from 'react-native-paper';
 import { router } from 'expo-router';
+import { theme } from '../../constants/theme';
 
 interface Props {
   title: string;
@@ -11,7 +12,7 @@ interface Props {
 export function AppHeader({ title, showBack = false, right }: Props) {
   return (
     <Appbar.Header
-      style={{ backgroundColor: '#1B3A7A', height: 52 }}
+      style={{ backgroundColor: theme.colors.brand, height: 52 }}
       statusBarHeight={0}
     >
       {showBack && <Appbar.BackAction onPress={() => router.back()} color="#fff" />}

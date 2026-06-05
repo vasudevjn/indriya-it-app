@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { theme } from '../../constants/theme';
 
 export default function AdminLayout() {
   const unreadCount = useNotificationStore((s) => s.unreadCount);
@@ -9,9 +10,13 @@ export default function AdminLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#1B3A7A',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarStyle: { borderTopColor: '#E5E7EB', paddingBottom: 8, height: 60 },
+        tabBarActiveTintColor: theme.colors.brand,
+        tabBarInactiveTintColor: theme.colors.textTertiary,
+        tabBarStyle: {
+          borderTopColor: theme.colors.border,
+          paddingBottom: theme.spacing.sm,
+          height: 60,
+        },
       }}
     >
       <Tabs.Screen
@@ -24,7 +29,7 @@ export default function AdminLayout() {
       <Tabs.Screen
         name="all-tickets"
         options={{
-          title: 'All Tickets',
+          title: 'All tickets',
           tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
         }}
       />
@@ -37,10 +42,10 @@ export default function AdminLayout() {
         }}
       />
 
-      {/* Hidden from tab bar -- reachable from home screen cards */}
+      {/* Hidden from tab bar — reachable from home screen cards */}
       <Tabs.Screen name="approvals"  options={{ href: null }} />
       <Tabs.Screen name="broadcasts" options={{ href: null }} />
-      <Tabs.Screen name="profile"    options={{ href: null }} />
+      <Tabs.Screen name="profile"    options={{ href: null, tabBarStyle: { display: 'none' } }} />
     </Tabs>
   );
 }

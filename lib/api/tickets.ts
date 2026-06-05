@@ -70,7 +70,7 @@ export async function createTicket(payload: {
 
 export async function updateTicket(
   id: string,
-  updates: Partial<Pick<DbTicket, 'status' | 'priority' | 'assignee_id' | 'resolution' | 'resolved_at' | 'category' | 'subcategory'>>,
+  updates: Partial<Pick<DbTicket, 'status' | 'priority' | 'assignee_id' | 'resolution' | 'resolved_at' | 'category' | 'subcategory' | 'description'>>,
 ): Promise<DbTicket> {
   const { data, error } = await supabase
     .from('tickets')

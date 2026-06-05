@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { TextInput, Button, Text } from 'react-native-paper';
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { DbStore } from '../../types';
 import { StoreSearchPicker } from './StoreSearchPicker';
+import { theme } from '../../constants/theme';
 
 interface Props {
   stores: DbStore[];
   onSubmit: (payload: {
     title: string;
     body: string;
-    target_store_ids: string[]; // empty = all stores
+    target_store_ids: string[];
   }) => void;
   isLoading?: boolean;
 }
@@ -28,38 +30,52 @@ export function BroadcastForm({ stores, onSubmit, isLoading }: Props) {
     setStoreIds([]);
   };
 
+  const canSend = !!title.trim() && !!body.trim() && !isLoading;
+
+  const selectedStoreName =
+    storeIds.length === 1 ? stores.find((s) => s.id === storeIds[0])?.name : null;
+
+  const sendLabel =
+    storeIds.length === 0 ? 'Send to all stores' :
+    storeIds.length === 1 ? `Send to ${selectedStoreName ?? 'selected store'}` :
+    `Send to ${storeIds.length} stores`;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <View style={styles.iconWrap}>
-          <Ionicons name="megaphone" size={18} color="#1B3A7A" />
+    <View style={[styles.card, theme.shadows.sm]}>
+      {/* Card header */}
+      <View style={styles.cardHeader}>
+        <View style={styles.iconBox}>
+          <Ionicons name="megaphone" size={18} color={theme.colors.brand} />
         </View>
-        <Text variant="titleMedium" style={styles.heading}>Send Broadcast</Text>
+        <Text style={styles.cardTitle}>Send broadcast</Text>
       </View>
 
-      <TextInput
-        label="Title"
-        value={title}
-        onChangeText={setTitle}
-        mode="outlined"
-        style={styles.input}
-        outlineColor="#E5E7EB"
-        activeOutlineColor="#1B3A7A"
-        dense
-      />
-      <TextInput
-        label="Message"
-        value={body}
-        onChangeText={setBody}
-        mode="outlined"
-        multiline
-        numberOfLines={3}
-        style={styles.input}
-        outlineColor="#E5E7EB"
-        activeOutlineColor="#1B3A7A"
-      />
+      {/* Title input */}
+      <View style={styles.inputWrap}>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Title"
+          placeholderTextColor={theme.colors.textTertiary}
+        />
+      </View>
 
-      {/* Multi-store picker */}
+      {/* Message input */}
+      <View style={[styles.inputWrap, styles.inputWrapTall]}>
+        <TextInput
+          style={[styles.input, styles.inputMultiline]}
+          value={body}
+          onChangeText={setBody}
+          placeholder="Message"
+          placeholderTextColor={theme.colors.textTertiary}
+          multiline
+          numberOfLines={4}
+          textAlignVertical="top"
+        />
+      </View>
+
+      {/* Store selector */}
       <StoreSearchPicker
         stores={stores}
         multiple
@@ -68,47 +84,82 @@ export function BroadcastForm({ stores, onSubmit, isLoading }: Props) {
         label="Send to (select stores, or leave blank for all)"
       />
 
-      <Button
-        mode="contained"
+      {/* Send button */}
+      <TouchableOpacity
+        style={[styles.sendBtn, !canSend && styles.sendBtnDisabled]}
         onPress={handleSubmit}
-        disabled={!title.trim() || !body.trim() || isLoading}
-        loading={isLoading}
-        buttonColor="#1B3A7A"
-        style={styles.sendBtn}
-        icon="send"
+        disabled={!canSend}
+        activeOpacity={0.8}
       >
-        {storeIds.length === 0
-          ? 'Send to All Stores'
-          : `Send to ${storeIds.length} Store${storeIds.length !== 1 ? 's' : ''}`}
-      </Button>
+        <Text style={styles.sendBtnText}>{sendLabel}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    margin: 16,
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.lg,
+    marginHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
   },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
-  iconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#E0EAF6',
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.lg,
+  },
+  iconBox: {
+    padding: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.brand + '1A',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heading: { fontWeight: '700', color: '#111827' },
-  input: { marginBottom: 12, backgroundColor: '#fff' },
-  sendBtn: { borderRadius: 8 },
+  cardTitle: {
+    fontWeight: '700',
+    color: theme.colors.textPrimary,
+    fontSize: 15,
+  },
+  inputWrap: {
+    backgroundColor: theme.colors.surface2,
+    borderWidth: 1.5,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
+  inputWrapTall: {
+    minHeight: theme.spacing.xxl * 4,
+  },
+  input: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    padding: 0,
+  },
+  inputMultiline: {
+    flex: 1,
+    paddingTop: theme.spacing.xs,
+    textAlignVertical: 'top',
+  },
+  sendBtn: {
+    backgroundColor: theme.colors.brand,
+    borderRadius: theme.radius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  sendBtnDisabled: {
+    backgroundColor: theme.colors.borderStrong,
+  },
+  sendBtnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
 });

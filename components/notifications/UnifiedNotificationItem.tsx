@@ -1,202 +1,287 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text } from 'react-native-paper';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { FeedItem, NotificationKind } from '../../hooks/useUnifiedNotifications';
+import { FeedItem } from '../../hooks/useUnifiedNotifications';
 import { NotificationType } from '../../types';
 import { timeAgo } from '../../lib/utils/date';
+import { theme } from '../../constants/theme';
 
 interface Props {
   item: FeedItem;
   onMarkRead?: (notificationId: string) => void;
 }
 
-/*  Visual config per kind  */
+// ─── A) Announcement card ────────────────────────────────────────────────────
 
-type IconConfig = {
+function AnnouncementCard({ item }: { item: FeedItem }) {
+  return (
+    <View style={styles.announceCard}>
+      <View style={styles.baseRow}>
+        <View style={styles.announceIconBox}>
+          <Ionicons name="megaphone" size={20} color="rgba(201,168,76,0.9)" />
+        </View>
+        <View style={styles.content}>
+          <Text style={styles.announceTag}>Announcement</Text>
+          <Text style={styles.announceTitle} numberOfLines={2}>{item.title}</Text>
+          {item.body ? (
+            <Text style={styles.announceBody} numberOfLines={2}>{item.body}</Text>
+          ) : null}
+          <Text style={styles.announceTime}>{timeAgo(item.created_at)}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ─── B) Gold rate card ───────────────────────────────────────────────────────
+
+function GoldRateCard({ item }: { item: FeedItem }) {
+  return (
+    <View style={styles.goldCard}>
+      <View style={styles.baseRow}>
+        <View style={styles.goldIconBox}>
+          <Ionicons name="trending-up" size={20} color="#C9A84C" />
+        </View>
+        <View style={styles.content}>
+          <Text style={styles.goldTag}>Gold rate</Text>
+          <Text style={styles.goldTitle} numberOfLines={2}>{item.title}</Text>
+          {item.body ? (
+            <Text style={styles.goldBody} numberOfLines={2}>{item.body}</Text>
+          ) : null}
+          <Text style={styles.goldTime}>{timeAgo(item.created_at)}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ─── C) Ticket card ──────────────────────────────────────────────────────────
+
+type TicketIconCfg = {
   icon: keyof typeof Ionicons.glyphMap;
-  iconColor: string;
-  iconBg: string;
-  rowBg: string;
-  rowBgUnread: string;
-  label: string;
-  labelColor: string;
+  color: string;
+  bg: string;
 };
 
-const KIND_CONFIG: Record<NotificationKind, IconConfig> = {
-  ticket: {
-    icon: 'notifications',
-    iconColor: '#1B3A7A',
-    iconBg: '#E0EAF6',
-    rowBg: '#fff',
-    rowBgUnread: '#EBF2FC',
-    label: 'Ticket',
-    labelColor: '#1B3A7A',
-  },
-  announcement: {
-    icon: 'megaphone',
-    iconColor: '#D97706',
-    iconBg: '#FEF3C7',
-    rowBg: '#FFFBEB',
-    rowBgUnread: '#FFFBEB',
-    label: 'Announcement',
-    labelColor: '#92400E',
-  },
-  gold_rate: {
-    icon: 'trending-up',
-    iconColor: '#C9A46A',
-    iconBg: '#FDF6E3',
-    rowBg: '#FFFDF5',
-    rowBgUnread: '#FFFDF5',
-    label: 'Gold Rate',
-    labelColor: '#78350F',
-  },
-};
+function getTicketIconCfg(type?: NotificationType | null): TicketIconCfg {
+  switch (type) {
+    case 'ticket_assigned':
+      return { icon: 'person-circle', color: '#7C3AED', bg: '#F5F3FF' };
+    case 'ticket_resolved':
+      return { icon: 'checkmark-circle', color: '#059669', bg: '#ECFDF5' };
+    case 'ticket_created':
+      return { icon: 'add-circle', color: '#2563EB', bg: '#EFF6FF' };
+    case 'ticket_updated':
+      return { icon: 'refresh-circle', color: '#2563EB', bg: '#EFF6FF' };
+    case 'ticket_comment':
+      return { icon: 'chatbubble-ellipses', color: '#2563EB', bg: '#EFF6FF' };
+    default:
+      return { icon: 'notifications', color: '#2563EB', bg: '#EFF6FF' };
+  }
+}
 
-/*  Per ticket-notification-type icon overrides  */
-
-const TICKET_TYPE_ICON: Partial<Record<NotificationType, Pick<IconConfig, 'icon' | 'iconColor' | 'iconBg'>>> = {
-  ticket_comment: {
-    icon: 'chatbubble-ellipses',
-    iconColor: '#7C3AED',
-    iconBg: '#EDE9FE',
-  },
-  ticket_assigned: {
-    icon: 'person-circle',
-    iconColor: '#2563EB',
-    iconBg: '#DBEAFE',
-  },
-  ticket_resolved: {
-    icon: 'checkmark-circle',
-    iconColor: '#059669',
-    iconBg: '#D1FAE5',
-  },
-  ticket_created: {
-    icon: 'add-circle',
-    iconColor: '#1B3A7A',
-    iconBg: '#E0EAF6',
-  },
-  ticket_updated: {
-    icon: 'refresh-circle',
-    iconColor: '#D97706',
-    iconBg: '#FEF3C7',
-  },
-};
-
-export function UnifiedNotificationItem({ item, onMarkRead }: Props) {
-  const baseCfg = KIND_CONFIG[item.kind];
-
-  // For ticket notifications, overlay the icon/colour based on the specific type
-  const typeOverride =
-    item.kind === 'ticket' && item.notificationType
-      ? TICKET_TYPE_ICON[item.notificationType]
-      : undefined;
-
-  const cfg = typeOverride ? { ...baseCfg, ...typeOverride } : baseCfg;
-
-  const isUnread = item.kind === 'ticket' && !item.is_read;
-  const bg = isUnread ? baseCfg.rowBgUnread : baseCfg.rowBg;
+function TicketCard({ item, onMarkRead }: { item: FeedItem; onMarkRead?: (id: string) => void }) {
+  const isUnread = !item.is_read;
+  const { icon, color, bg } = getTicketIconCfg(item.notificationType);
 
   const handlePress = () => {
-    if (item.kind === 'ticket') {
-      if (!item.is_read && item.notificationId && onMarkRead) {
-        onMarkRead(item.notificationId);
-      }
-      if (item.ticket_id) {
-        router.push(`/tickets/${item.ticket_id}`);
-      }
+    if (!item.is_read && item.notificationId && onMarkRead) {
+      onMarkRead(item.notificationId);
     }
-    // Broadcasts/gold rate: no action on tap
+    if (item.ticket_id) {
+      router.push(`/tickets/${item.ticket_id}`);
+    }
   };
 
   return (
     <TouchableOpacity
-      style={[styles.row, { backgroundColor: bg }]}
+      style={[styles.ticketCard, isUnread ? styles.ticketUnread : styles.ticketRead]}
       onPress={handlePress}
       activeOpacity={item.ticket_id ? 0.7 : 1}
     >
-      {/* Icon */}
-      <View style={[styles.iconWrap, { backgroundColor: cfg.iconBg }]}>
-        <Ionicons name={cfg.icon} size={20} color={cfg.iconColor} />
-      </View>
-
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Kind label badge */}
-        <View style={[styles.kindBadge, { backgroundColor: cfg.iconBg }]}>
-          <Text style={[styles.kindLabel, { color: cfg.labelColor }]}>{cfg.label}</Text>
+      <View style={styles.baseRow}>
+        <View style={[styles.iconBox, { backgroundColor: bg }]}>
+          <Ionicons name={icon} size={20} color={color} />
         </View>
-        <Text variant="labelMedium" style={styles.title} numberOfLines={2}>
-          {item.title}
-        </Text>
-        {item.body ? (
-          <Text variant="bodySmall" style={styles.body} numberOfLines={2}>
-            {item.body}
-          </Text>
-        ) : null}
-        <Text variant="labelSmall" style={styles.time}>{timeAgo(item.created_at)}</Text>
+        <View style={styles.content}>
+          <Text style={styles.ticketTag}>Ticket</Text>
+          <Text style={styles.ticketTitle} numberOfLines={2}>{item.title}</Text>
+          {item.body ? (
+            <Text style={styles.ticketBody} numberOfLines={2}>{item.body}</Text>
+          ) : null}
+          <Text style={styles.ticketTime}>{timeAgo(item.created_at)}</Text>
+        </View>
       </View>
-
-      {/* Unread dot (tickets only) */}
-      {isUnread && <View style={styles.dot} />}
+      {isUnread && <View style={styles.unreadDot} />}
     </TouchableOpacity>
   );
 }
 
+// ─── Main export ─────────────────────────────────────────────────────────────
+
+export function UnifiedNotificationItem({ item, onMarkRead }: Props) {
+  if (item.kind === 'announcement') return <AnnouncementCard item={item} />;
+  if (item.kind === 'gold_rate') return <GoldRateCard item={item} />;
+  return <TicketCard item={item} onMarkRead={onMarkRead} />;
+}
+
+// ─── Styles ──────────────────────────────────────────────────────────────────
+
+const ICON_SIZE = 38;
+
 const styles = StyleSheet.create({
-  row: {
+  // Shared layout
+  baseRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-    gap: 12,
+    gap: theme.spacing.md,
   },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  content: {
+    flex: 1,
+    gap: theme.spacing.xs - 1,
+  },
+  iconBox: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: theme.radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  content: {
-    flex: 1,
-    gap: 3,
+
+  // ── A) Announcement ───────────────────────────────────────────────────────
+  announceCard: {
+    backgroundColor: '#1E3A5F',
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.lg,
+    ...theme.shadows.md,
   },
-  kindBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: 10,
-    paddingHorizontal: 7,
-    paddingVertical: 1,
-    marginBottom: 2,
+  announceIconBox: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: theme.radius.sm,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
-  kindLabel: {
+  announceTag: {
     fontSize: 10,
     fontWeight: '700',
+    color: '#C9A84C',
     textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    letterSpacing: 0.7,
+    marginBottom: theme.spacing.xs - 1,
   },
-  title: {
-    color: '#111827',
-    fontWeight: '600',
+  announceTitle: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  announceBody: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
     lineHeight: 18,
   },
-  body: {
-    color: '#6B7280',
-    lineHeight: 17,
+  announceTime: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 11,
+    marginTop: theme.spacing.xs,
   },
-  time: {
-    color: '#9CA3AF',
-    marginTop: 2,
+
+  // ── B) Gold rate ──────────────────────────────────────────────────────────
+  goldCard: {
+    backgroundColor: '#2A1E00',
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(201,168,76,0.25)',
+    padding: theme.spacing.lg,
+    ...theme.shadows.sm,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#1B3A7A',
-    marginTop: 6,
+  goldIconBox: {
+    width: ICON_SIZE,
+    height: ICON_SIZE,
+    borderRadius: theme.radius.sm,
+    backgroundColor: 'rgba(201,168,76,0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
     flexShrink: 0,
+  },
+  goldTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#C9A84C',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginBottom: theme.spacing.xs - 1,
+  },
+  goldTitle: {
+    color: '#C9A84C',
+    fontWeight: '700',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  goldBody: {
+    color: 'rgba(201,168,76,0.6)',
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  goldTime: {
+    color: 'rgba(201,168,76,0.3)',
+    fontSize: 11,
+    marginTop: theme.spacing.xs,
+  },
+
+  // ── C) Ticket ─────────────────────────────────────────────────────────────
+  ticketCard: {
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.lg,
+  },
+  ticketUnread: {
+    backgroundColor: '#F0F5FF',
+    borderWidth: 1,
+    borderColor: '#C7D9F5',
+    ...theme.shadows.sm,
+  },
+  ticketRead: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    ...theme.shadows.sm,
+  },
+  ticketTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.textTertiary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+    marginBottom: theme.spacing.xs - 1,
+  },
+  ticketTitle: {
+    color: theme.colors.textPrimary,
+    fontWeight: '700',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  ticketBody: {
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  ticketTime: {
+    color: theme.colors.textTertiary,
+    fontSize: 11,
+    marginTop: theme.spacing.xs,
+  },
+  unreadDot: {
+    position: 'absolute',
+    top: theme.spacing.md,
+    right: theme.spacing.md,
+    width: 7,
+    height: 7,
+    borderRadius: theme.radius.full,
+    backgroundColor: '#2563EB',
   },
 });
