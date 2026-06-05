@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { FlatList, View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { Text } from 'react-native-paper';
+import { FlatList, View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Screen } from '../../components/common/Screen';
-import { AppHeader } from '../../components/common/AppHeader';
 import { TicketCard } from '../../components/tickets/TicketCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
@@ -18,8 +16,10 @@ export default function AdminAllTickets() {
   const filters: (TicketStatus | undefined)[] = [undefined, ...ALL_STATUSES];
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="All Tickets" />
+    <Screen edges={['top', 'left', 'right']} style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>All Tickets</Text>
+      </View>
       <View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {filters.map((s) => {
@@ -64,6 +64,21 @@ export default function AdminAllTickets() {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: theme.colors.brand,
+  },
+  header: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.brand,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
   chips: {
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,

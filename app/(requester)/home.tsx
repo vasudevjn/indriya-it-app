@@ -64,7 +64,6 @@ export default function RequesterHome() {
       {/* Header */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.headerAppName}>INDRIYA IT</Text>
           <Text style={styles.headerGreeting}>
             Hello, {profile?.full_name?.split(' ')[0]}
           </Text>
@@ -139,13 +138,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.brand,
   },
   header: {
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: theme.colors.brand,
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.lg,
-    paddingBottom: theme.spacing.xl,
   },
   headerAppName: {
     fontSize: 11,

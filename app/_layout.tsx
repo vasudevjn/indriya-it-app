@@ -123,7 +123,7 @@ export default function RootLayout() {
           <StatusBar style="auto" backgroundColor="#1B3A7A" />
           <Stack screenOptions={{
             headerShown: false,
-            statusBarStyle: 'dark',
+            statusBarStyle: 'light',
           }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />

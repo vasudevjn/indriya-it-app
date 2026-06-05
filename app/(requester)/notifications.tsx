@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, RefreshControl,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Screen } from '../../components/common/Screen';
 import { UnifiedNotificationItem } from '../../components/notifications/UnifiedNotificationItem';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
@@ -19,14 +19,13 @@ export default function RequesterNotifications() {
     profile?.store_id ?? null,
   );
   const { markOne, markAll } = useMarkRead(profile?.id ?? '');
-  const insets = useSafeAreaInsets();
 
   if (isLoading) return <LoadingOverlay />;
 
   return (
-    <View style={styles.root}>
+    <Screen edges={['top', 'left', 'right']} style={styles.screen}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>Alerts</Text>
         <TouchableOpacity
           style={styles.markAllBtn}
@@ -65,27 +64,26 @@ export default function RequesterNotifications() {
           />
         }
       />
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: theme.colors.bg,
+  screen: {
+    backgroundColor: theme.colors.brand,
   },
   header: {
+    height: 56,
     backgroundColor: theme.colors.brand,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.md,
   },
   headerTitle: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 22,
+    fontSize: 18,
   },
   markAllBtn: {
     borderWidth: 1.5,
@@ -101,6 +99,7 @@ const styles = StyleSheet.create({
   },
   list: {
     flex: 1,
+    backgroundColor: theme.colors.bg,
   },
   listContent: {
     padding: theme.spacing.md,

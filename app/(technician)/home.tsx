@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Screen } from '../../components/common/Screen';
 import { GoldRateCard } from '../../components/home/GoldRateCard';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { useTickets } from '../../hooks/useTickets';
@@ -35,7 +35,6 @@ function StatCard({ label, count, accentColor, onPress }: StatCardProps) {
 export default function TechnicianHome() {
   const { profile } = useCurrentUser();
   const qc = useQueryClient();
-  const insets = useSafeAreaInsets();
 
   const { data: queueTickets, refetch: refetchQueue } = useTickets({ status: 'open' });
   const { data: myOpenTickets, refetch: refetchMyOpen } = useTickets({
@@ -80,10 +79,9 @@ export default function TechnicianHome() {
   const initial   = firstName.charAt(0).toUpperCase();
 
   return (
-    <View style={styles.root}>
-      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.md }]}>
+    <Screen edges={['top', 'left', 'right']} style={styles.screen}>
+      <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.appName}>INDRIYA IT</Text>
           <Text style={styles.greeting}>Hello, {firstName}</Text>
         </View>
         <TouchableOpacity
@@ -97,6 +95,7 @@ export default function TechnicianHome() {
       </View>
 
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.body}
         refreshControl={
           <RefreshControl
@@ -147,22 +146,25 @@ export default function TechnicianHome() {
           />
         </View>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: theme.colors.bg,
+  screen: {
+    backgroundColor: theme.colors.brand,
   },
   header: {
+    height: 56,
     backgroundColor: theme.colors.brand,
     paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  scrollView: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
   },
   headerLeft: {
     gap: theme.spacing.xs,

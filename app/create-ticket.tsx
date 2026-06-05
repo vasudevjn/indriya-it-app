@@ -245,7 +245,7 @@ export default function CreateTicket() {
           ListFooterComponent={
             <>
               {/* Priority selector card */}
-              {(step === 'description' || step === 'category' || step === 'attachments') && (
+              {(step === 'category' || step === 'attachments') && (
                 <View style={styles.card}>
                   <Text style={styles.priorityLabel}>PRIORITY</Text>
                   <View style={styles.pillRow}>
@@ -498,6 +498,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.brand,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: theme.spacing.sm,
     paddingBottom: theme.spacing.md,
   },
@@ -512,7 +513,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     color: '#fff',
     fontWeight: '700',
-    fontSize: 17,
+    fontSize: 18,
   },
   headerRight: {
     flexDirection: 'row',

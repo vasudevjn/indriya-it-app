@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700',
   },
 
