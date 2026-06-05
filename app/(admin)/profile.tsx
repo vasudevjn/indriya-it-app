@@ -32,7 +32,7 @@ export default function AdminProfile() {
           <Ionicons name="chevron-back" size={20} color="rgba(255,255,255,0.6)" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My profile</Text>
+        <Text style={styles.headerTitle}>My Profile</Text>
       </View>
 
       {/* Body */}
@@ -74,7 +74,7 @@ export default function AdminProfile() {
         {/* Sign out */}
         <TouchableOpacity style={styles.signOutBtn} onPress={signOut} activeOpacity={0.75}>
           <Ionicons name="log-out-outline" size={20} color={theme.colors.errorStrong} />
-          <Text style={styles.signOutText}>Sign out</Text>
+          <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

@@ -42,7 +42,7 @@ export function GoldRateCard() {
           <View style={styles.goldIconWrap}>
             <Ionicons name="trending-up" size={18} color={theme.colors.accent} />
           </View>
-          <Text style={styles.cardTitle}>Gold rate today</Text>
+          <Text style={styles.cardTitle}>Gold Rate</Text>
         </View>
         <TouchableOpacity
           onPress={() => refetch()}

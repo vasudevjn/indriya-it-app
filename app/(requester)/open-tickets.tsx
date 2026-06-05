@@ -22,7 +22,7 @@ export default function OpenTickets() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Open tickets" />
+      <AppHeader title="Open Tickets" />
       <FlatList
         data={tickets}
         keyExtractor={(t) => t.id}

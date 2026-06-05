@@ -142,7 +142,7 @@ export default function Login() {
             >
               {loading
                 ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.signInBtnText}>Sign in</Text>
+                : <Text style={styles.signInBtnText}>Sign In</Text>
               }
             </TouchableOpacity>
 
@@ -152,7 +152,7 @@ export default function Login() {
               style={styles.forgotBtn}
               activeOpacity={0.7}
             >
-              <Text style={styles.forgotText}>Forgot password?</Text>
+              <Text style={styles.forgotText}>Forgot Password?</Text>
             </TouchableOpacity>
 
             {/* Divider */}
@@ -168,7 +168,7 @@ export default function Login() {
               style={styles.outlineBtn}
               activeOpacity={0.7}
             >
-              <Text style={styles.outlineBtnText}>Register as store staff</Text>
+              <Text style={styles.outlineBtnText}>Register as Store Staff</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -176,7 +176,7 @@ export default function Login() {
               style={[styles.outlineBtn, styles.outlineBtnSpaced]}
               activeOpacity={0.7}
             >
-              <Text style={styles.outlineBtnText}>Register as IT technician</Text>
+              <Text style={styles.outlineBtnText}>Register as Technician</Text>
             </TouchableOpacity>
           </View>
 

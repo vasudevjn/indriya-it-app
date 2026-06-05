@@ -94,7 +94,7 @@ export default function AdminHome() {
       >
         <GoldRateCard />
 
-        <Text style={styles.sectionLabel}>Quick actions</Text>
+        <Text style={styles.sectionLabel}>Quick Actions</Text>
 
         <View style={[styles.actionsCard, theme.shadows.sm]}>
           <ActionRow

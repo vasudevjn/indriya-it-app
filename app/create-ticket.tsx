@@ -188,7 +188,7 @@ export default function CreateTicket() {
   };
 
   const allMessages: ChatMessage[] = [
-    { id: 'welcome', text: "Hello! Describe your IT issue and I'll raise a ticket for you.", sender: 'system' },
+    { id: 'welcome', text: "Hello! Describe your issue and I'll raise a ticket for you.", sender: 'system' },
     ...messages,
   ];
 
@@ -218,7 +218,7 @@ export default function CreateTicket() {
         {/* Absolutely centered title — pointerEvents none so touches reach the buttons */}
         <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>New IT ticket</Text>
+            <Text style={styles.headerTitle}>New Ticket</Text>
           </View>
         </View>
 
@@ -461,7 +461,7 @@ export default function CreateTicket() {
               <TextInput
                 value={inputText}
                 onChangeText={setInputText}
-                placeholder="Describe your IT issue…"
+                placeholder="Describe your issue"
                 placeholderTextColor={theme.colors.textTertiary}
                 multiline
                 style={styles.chatInput}

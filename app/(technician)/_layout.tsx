@@ -29,7 +29,7 @@ export default function TechnicianLayout() {
       <Tabs.Screen
         name="all-tickets"
         options={{
-          title: 'All tickets',
+          title: 'All Tickets',
           tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
         }}
       />
@@ -44,7 +44,6 @@ export default function TechnicianLayout() {
 
       {/* Hidden from tab bar */}
       <Tabs.Screen name="profile"    options={{ href: null, tabBarStyle: { display: 'none' } }} />
-      <Tabs.Screen name="queue"      options={{ href: null }} />
       <Tabs.Screen name="my-tickets" options={{ href: null }} />
     </Tabs>
   );

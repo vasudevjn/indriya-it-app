@@ -125,7 +125,7 @@ export default function AdminBroadcasts() {
           <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.6)" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Publish</Text>
+        <Text style={styles.headerTitle}>Publish Announcement</Text>
       </View>
 
       {/* Tab bar */}

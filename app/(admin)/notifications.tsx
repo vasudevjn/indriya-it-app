@@ -34,7 +34,7 @@ export default function AdminNotifications() {
           onPress={() => markAll.mutate()}
           activeOpacity={0.75}
         >
-          <Text style={styles.markAllText}>Mark all read</Text>
+          <Text style={styles.markAllText}>Mark all as read</Text>
         </TouchableOpacity>
       </View>
 

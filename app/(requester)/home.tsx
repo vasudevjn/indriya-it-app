@@ -108,7 +108,7 @@ export default function RequesterHome() {
             onPress={() => goTickets('open')}
           />
           <StatCard
-            label="In progress"
+            label="In Progress"
             count={inProgress}
             color={theme.statusColors.in_progress.accent}
             onPress={() => goTickets('in_progress')}
@@ -127,7 +127,7 @@ export default function RequesterHome() {
           activeOpacity={0.85}
         >
           <Ionicons name="add" size={20} color="#fff" style={styles.raiseCtaIcon} />
-          <Text style={styles.raiseCtaText}>Raise IT ticket</Text>
+          <Text style={styles.raiseCtaText}>Raise Ticket</Text>
         </TouchableOpacity>
       </ScrollView>
     </Screen>

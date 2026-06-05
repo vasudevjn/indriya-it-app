@@ -110,7 +110,7 @@ export default function RegisterTechnician() {
             onPress={() => setSuccess(false)}
             activeOpacity={0.8}
           >
-            <Text style={styles.backToLoginText}>Back to login</Text>
+            <Text style={styles.backToLoginText}>Back to Login</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -125,7 +125,7 @@ export default function RegisterTechnician() {
           <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.6)" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Register as IT technician</Text>
+        <Text style={styles.headerTitle}>Register as Technician</Text>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -199,7 +199,7 @@ export default function RegisterTechnician() {
           >
             {loading
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.submitBtnText}>Submit for approval</Text>
+              : <Text style={styles.submitBtnText}>Submit for Approval</Text>
             }
           </TouchableOpacity>
 

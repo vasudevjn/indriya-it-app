@@ -46,7 +46,7 @@ export const theme = {
   } satisfies Record<TicketStatus, { text: string; bg: string; accent: string }>,
   statusLabels: {
     open: 'Open',
-    in_progress: 'In progress',
+    in_progress: 'In Progress',
     pending: 'Pending',
     resolved: 'Resolved',
     closed: 'Closed',

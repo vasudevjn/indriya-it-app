@@ -29,7 +29,7 @@ export default function AdminLayout() {
       <Tabs.Screen
         name="all-tickets"
         options={{
-          title: 'All tickets',
+          title: 'All Tickets',
           tabBarIcon: ({ color, size }) => <Ionicons name="grid-outline" size={size} color={color} />,
         }}
       />

@@ -27,7 +27,7 @@ export function TechnicianApprovalCard({ profile, onApprove, onReject, isLoading
           {profile.designation ? (
             <Text style={styles.designation}>{profile.designation}</Text>
           ) : null}
-          <Text style={styles.accountLabel}>IT TECHNICIAN ACCOUNT</Text>
+          <Text style={styles.accountLabel}>TECHNICIAN ACCOUNT</Text>
         </View>
       </View>
 

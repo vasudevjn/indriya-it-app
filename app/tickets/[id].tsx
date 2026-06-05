@@ -177,7 +177,7 @@ export default function TicketDetail() {
               activeOpacity={0.75}
             >
               <Ionicons name="person-add-outline" size={18} color={theme.colors.textPrimary} />
-              <Text style={styles.actionLabelDark}>Assign to me</Text>
+              <Text style={styles.actionLabelDark}>Assign to Me</Text>
             </TouchableOpacity>
           )}
           {canStatus && (
@@ -187,7 +187,7 @@ export default function TicketDetail() {
               activeOpacity={0.75}
             >
               <Ionicons name="swap-horizontal-outline" size={18} color="#fff" />
-              <Text style={styles.actionLabelLight}>Change status</Text>
+              <Text style={styles.actionLabelLight}>Change Status</Text>
             </TouchableOpacity>
           )}
           {(isAssignee || isStaff) && ticket.status !== 'resolved' && ticket.status !== 'closed' && (
@@ -273,7 +273,7 @@ export default function TicketDetail() {
           <View style={styles.card}>
             <View style={styles.cardHeaderRow}>
               <Text style={styles.cardLabel}>DESCRIPTION</Text>
-              {isRequester && <Text style={styles.tapToEdit}>Tap to edit</Text>}
+              {isRequester && <Text style={styles.tapToEdit}>Tap to Edit</Text>}
             </View>
             {isRequester ? (
               <>
@@ -304,7 +304,7 @@ export default function TicketDetail() {
                 <Text style={styles.descReadText}>{ticket.description}</Text>
                 <View style={styles.readOnlyBadge}>
                   <Ionicons name="lock-closed-outline" size={11} color={theme.colors.textTertiary} />
-                  <Text style={styles.readOnlyText}>Read only</Text>
+                  <Text style={styles.readOnlyText}>Read Only</Text>
                 </View>
               </>
             )}

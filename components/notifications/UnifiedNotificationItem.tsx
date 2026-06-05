@@ -44,7 +44,7 @@ function GoldRateCard({ item }: { item: FeedItem }) {
           <Ionicons name="trending-up" size={20} color="#C9A84C" />
         </View>
         <View style={styles.content}>
-          <Text style={styles.goldTag}>Gold rate</Text>
+          <Text style={styles.goldTag}>Gold Rate</Text>
           <Text style={styles.goldTitle} numberOfLines={2}>{item.title}</Text>
           {item.body ? (
             <Text style={styles.goldBody} numberOfLines={2}>{item.body}</Text>

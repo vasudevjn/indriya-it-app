@@ -136,7 +136,7 @@ export default function RegisterRequester() {
           <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.6)" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Register as store staff</Text>
+        <Text style={styles.headerTitle}>Register as Store Staff</Text>
       </View>
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
@@ -224,7 +224,7 @@ export default function RegisterRequester() {
           >
             {loading
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.submitBtnText}>Create account</Text>
+              : <Text style={styles.submitBtnText}>Create Account</Text>
             }
           </TouchableOpacity>
 

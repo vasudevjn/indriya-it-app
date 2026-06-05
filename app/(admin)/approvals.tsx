@@ -67,7 +67,7 @@ export default function AdminApprovals() {
           <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.6)" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Pending approvals</Text>
+        <Text style={styles.headerTitle}>Pending Approvals</Text>
       </View>
 
       <FlatList

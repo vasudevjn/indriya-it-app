@@ -220,7 +220,7 @@ export function StoreSearchPicker(props: Props) {
                     <Text style={[styles.rowName, allStoreSelected && styles.rowNameSelected]}>
                       All stores
                     </Text>
-                    <Text style={styles.rowCity}>Send to everyone</Text>
+                    <Text style={styles.rowCity}>Send to Everyone</Text>
                   </View>
                   {multi ? (
                     <View style={[styles.checkbox, allStoreSelected && styles.checkboxSelected]}>

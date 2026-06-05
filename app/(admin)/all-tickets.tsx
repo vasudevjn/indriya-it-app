@@ -19,7 +19,7 @@ export default function AdminAllTickets() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="All tickets" />
+      <AppHeader title="All Tickets" />
       <View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {filters.map((s) => {

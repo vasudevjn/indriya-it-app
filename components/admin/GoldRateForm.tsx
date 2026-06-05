@@ -140,12 +140,12 @@ export function GoldRateForm() {
         <View style={styles.iconBox}>
           <Ionicons name="trending-up" size={18} color={theme.colors.accent} />
         </View>
-        <Text style={styles.cardTitle}>Update gold rate</Text>
+        <Text style={styles.cardTitle}>Update Gold Rate</Text>
       </View>
 
       {/* Auto-fill toggle */}
       <View style={styles.toggleRow}>
-        <Text style={styles.toggleLabel}>Auto-fill from 24K (999)</Text>
+        <Text style={styles.toggleLabel}>Auto-calculate</Text>
         <Switch
           value={autoFill}
           onValueChange={setAutoFill}
@@ -184,7 +184,7 @@ export function GoldRateForm() {
       >
         <Ionicons name="save-outline" size={16} color="#fff" />
         <Text style={styles.saveBtnText}>
-          {isPending ? 'Saving...' : 'Save & notify all stores'}
+          {isPending ? 'Saving...' : 'Save & Notify All Stores'}
         </Text>
       </TouchableOpacity>
     </View>

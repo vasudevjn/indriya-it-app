@@ -109,11 +109,11 @@ export default function TechnicianHome() {
       >
         <GoldRateCard />
 
-        <Text style={styles.sectionLabel}>Ticket overview</Text>
+        <Text style={styles.sectionLabel}>Ticket Overview</Text>
 
         <View style={styles.statsRow}>
           <StatCard
-            label="In queue"
+            label="In Queue"
             count={queueCount}
             accentColor={theme.statusColors.open.accent}
             onPress={() =>
