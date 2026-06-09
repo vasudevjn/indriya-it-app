@@ -23,6 +23,7 @@ export default function MyTickets() {
         data={tickets ?? []}
         keyExtractor={(t) => t.id}
         renderItem={({ item }) => <TicketCard ticket={item} />}
+        style={styles.flatList}
         contentContainerStyle={styles.list}
         refreshControl={
           <RefreshControl
@@ -49,11 +50,15 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.brand,
   },
   header: {
-    height: 56,
+    height: 52,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: theme.spacing.lg,
     backgroundColor: theme.colors.brand,
+  },
+  flatList: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
   },
   headerTitle: {
     color: '#fff',

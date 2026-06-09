@@ -141,8 +141,7 @@ export default function TicketDetail() {
       {/* 1. Header */}
       <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
         <TouchableOpacity style={styles.backRow} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={20} color="rgba(255,255,255,0.6)" />
-          <Text style={styles.backText}>Back</Text>
+          <Ionicons name="chevron-back" size={22} color="rgba(255,255,255,0.8)" />
         </TouchableOpacity>
         <Text style={styles.ticketNumber}>{ticket.ticket_number}</Text>
         <View style={styles.chipsRow}>
@@ -402,14 +401,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.xs,
   },
   backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-  },
-  backText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 15,
-    fontWeight: '500',
+    alignSelf: 'flex-start',
   },
   ticketNumber: {
     color: '#fff',

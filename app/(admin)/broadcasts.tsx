@@ -122,10 +122,14 @@ export default function AdminBroadcasts() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
-          <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.6)" />
-          <Text style={styles.backText}>Back</Text>
+          <Ionicons name="chevron-back" size={22} color="rgba(255,255,255,0.8)" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Publish Announcement</Text>
+        <View style={[StyleSheet.absoluteFillObject, { paddingTop: insets.top + theme.spacing.sm, paddingBottom: theme.spacing.md }]} pointerEvents="none">
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Publish Announcement</Text>
+          </View>
+        </View>
+        <View style={styles.headerRight} />
       </View>
 
       {/* Tab bar */}
@@ -213,24 +217,27 @@ const styles = StyleSheet.create({
   // Header
   header: {
     backgroundColor: theme.colors.brand,
-    paddingHorizontal: theme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.sm,
     paddingBottom: theme.spacing.md,
   },
   backBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.xs,
-    marginBottom: theme.spacing.xs,
+    padding: theme.spacing.sm,
   },
-  backText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 14,
-    fontWeight: '500',
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
+  },
+  headerRight: {
+    width: 38,
   },
 
   // Tab bar

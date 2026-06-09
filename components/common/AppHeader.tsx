@@ -16,7 +16,7 @@ export function AppHeader({ title, showBack = false, right }: Props) {
       statusBarHeight={0}
     >
       {showBack && <Appbar.BackAction onPress={() => router.back()} color="#fff" />}
-      <Appbar.Content title={title} titleStyle={{ color: '#fff', fontWeight: '700' }} />
+      <Appbar.Content title={title} titleStyle={{ color: '#fff', fontWeight: '700', fontSize: 18 }} />
       {right}
     </Appbar.Header>
   );

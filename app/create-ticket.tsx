@@ -216,7 +216,7 @@ export default function CreateTicket() {
         </TouchableOpacity>
 
         {/* Absolutely centered title — pointerEvents none so touches reach the buttons */}
-        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+        <View style={[StyleSheet.absoluteFillObject, { paddingTop: insets.top + theme.spacing.sm, paddingBottom: theme.spacing.md }]} pointerEvents="none">
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>New Ticket</Text>
           </View>
@@ -245,7 +245,7 @@ export default function CreateTicket() {
           ListFooterComponent={
             <>
               {/* Priority selector card */}
-              {(step === 'category' || step === 'attachments') && (
+              {step === 'category' && (
                 <View style={styles.card}>
                   <Text style={styles.priorityLabel}>PRIORITY</Text>
                   <View style={styles.pillRow}>
@@ -330,7 +330,7 @@ export default function CreateTicket() {
                     style={styles.actionBtn}
                     icon="check"
                   >
-                    Confirm Category
+                    Confirm
                   </Button>
                 </View>
               )}

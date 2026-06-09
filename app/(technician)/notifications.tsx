@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.brand,
   },
   header: {
-    height: 56,
+    height: 52,
     backgroundColor: theme.colors.brand,
     flexDirection: 'row',
     alignItems: 'center',
