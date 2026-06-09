@@ -13,7 +13,6 @@ export const ROUTES = {
   REQUESTER_PROFILE: '/(requester)/profile',
 
   // Technician
-  TECHNICIAN_QUEUE: '/(technician)/queue',
   TECHNICIAN_MY_TICKETS: '/(technician)/my-tickets',
   TECHNICIAN_ALL_TICKETS: '/(technician)/all-tickets',
   TECHNICIAN_NOTIFICATIONS: '/(technician)/notifications',

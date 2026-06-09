@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { Text, Switch } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../constants/theme';
 
 interface Props {
   onSubmit: (body: string, isInternal: boolean) => void;
@@ -21,8 +22,8 @@ export function CommentInput({ onSubmit, isSubmitting, canMarkInternal }: Props)
   };
 
   const canSend = !!body.trim() && !isSubmitting;
-  const activeBorderColor = isInternal ? '#8B5CF6' : '#1B3A7A';
-  const borderColor = focused ? activeBorderColor : '#E5E7EB';
+  const activeBorderColor = isInternal ? '#8B5CF6' : theme.colors.brand;
+  const borderColor = focused ? activeBorderColor : theme.colors.border;
 
   return (
     <View style={[styles.container, isInternal && styles.containerInternal]}>
@@ -31,7 +32,7 @@ export function CommentInput({ onSubmit, isSubmitting, canMarkInternal }: Props)
           <Ionicons
             name="lock-closed"
             size={12}
-            color={isInternal ? '#8B5CF6' : '#9CA3AF'}
+            color={isInternal ? '#8B5CF6' : theme.colors.textTertiary}
           />
           <Text style={[styles.internalLabel, isInternal && styles.internalLabelActive]}>
             Internal note
@@ -46,7 +47,7 @@ export function CommentInput({ onSubmit, isSubmitting, canMarkInternal }: Props)
             value={body}
             onChangeText={setBody}
             placeholder="Add a comment…"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={theme.colors.textTertiary}
             multiline
             style={styles.input}
             onFocus={() => setFocused(true)}
@@ -69,13 +70,13 @@ export function CommentInput({ onSubmit, isSubmitting, canMarkInternal }: Props)
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 14 : 12,
-    gap: 6,
+    borderTopColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.sm + 2,
+    paddingBottom: Platform.OS === 'ios' ? theme.spacing.md + 2 : theme.spacing.md,
+    gap: theme.spacing.sm - 2,
   },
   containerInternal: {
     backgroundColor: '#FAFAFF',
@@ -84,13 +85,13 @@ const styles = StyleSheet.create({
   internalRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 2,
+    gap: theme.spacing.sm - 2,
+    paddingHorizontal: theme.spacing.xs - 2,
   },
   internalLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: theme.colors.textTertiary,
     flex: 1,
   },
   internalLabelActive: {
@@ -100,14 +101,14 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 8,
+    gap: theme.spacing.sm,
   },
   inputWrap: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 24,
+    backgroundColor: theme.colors.surface2,
+    borderRadius: theme.radius.full,
     borderWidth: 1.5,
-    paddingHorizontal: 16,
+    paddingHorizontal: theme.spacing.lg,
     paddingTop: Platform.OS === 'ios' ? 11 : 9,
     paddingBottom: Platform.OS === 'ios' ? 11 : 9,
     minHeight: 48,
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 15,
-    color: '#111827',
+    color: theme.colors.textPrimary,
     padding: 0,
     margin: 0,
     maxHeight: 108,
@@ -128,14 +129,14 @@ const styles = StyleSheet.create({
   sendBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendBtnActive: {
-    backgroundColor: '#1B3A7A',
+    backgroundColor: theme.colors.brand,
   },
   sendBtnIdle: {
-    backgroundColor: '#D1D5DB',
+    backgroundColor: theme.colors.borderStrong,
   },
 });

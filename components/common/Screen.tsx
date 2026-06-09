@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { theme } from '../../constants/theme';
 
 interface Props {
   children: React.ReactNode;
@@ -19,6 +20,6 @@ export function Screen({ children, style, edges = ['top', 'bottom', 'left', 'rig
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: theme.colors.bg,
   },
 });

@@ -1,12 +1,12 @@
 import React from 'react';
-import { FlatList, StyleSheet, RefreshControl } from 'react-native';
+import { FlatList, View, Text, StyleSheet, RefreshControl } from 'react-native';
 import { Screen } from '../../components/common/Screen';
-import { AppHeader } from '../../components/common/AppHeader';
 import { TicketCard } from '../../components/tickets/TicketCard';
 import { EmptyState } from '../../components/common/EmptyState';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { useTickets } from '../../hooks/useTickets';
+import { theme } from '../../constants/theme';
 
 export default function MyTickets() {
   const { profile } = useCurrentUser();
@@ -15,14 +15,23 @@ export default function MyTickets() {
   if (isLoading) return <LoadingOverlay />;
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="My Assigned Tickets" />
+    <Screen edges={['top', 'left', 'right']} style={styles.screen}>
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My Tickets</Text>
+      </View>
       <FlatList
         data={tickets ?? []}
         keyExtractor={(t) => t.id}
         renderItem={({ item }) => <TicketCard ticket={item} />}
         contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={refetch}
+            tintColor={theme.colors.brand}
+            colors={[theme.colors.brand]}
+          />
+        }
         ListEmptyComponent={
           <EmptyState
             icon="person-outline"
@@ -36,8 +45,23 @@ export default function MyTickets() {
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    backgroundColor: theme.colors.brand,
+  },
+  header: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.brand,
+  },
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
   list: {
-    paddingVertical: 8,
-    paddingBottom: 24,
+    paddingVertical: theme.spacing.sm,
+    paddingBottom: theme.spacing.xxl,
   },
 });

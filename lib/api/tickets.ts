@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { supabase } from '../supabase';
 import { DbTicket, TicketStatus, TicketPriority, DbTicketAttachment } from '../../types';
 import { TicketWithRelations } from '../../types/ticket';
@@ -70,7 +70,7 @@ export async function createTicket(payload: {
 
 export async function updateTicket(
   id: string,
-  updates: Partial<Pick<DbTicket, 'status' | 'priority' | 'assignee_id' | 'resolution' | 'resolved_at' | 'category' | 'subcategory'>>,
+  updates: Partial<Pick<DbTicket, 'status' | 'priority' | 'assignee_id' | 'resolution' | 'resolved_at' | 'category' | 'subcategory' | 'description'>>,
 ): Promise<DbTicket> {
   const { data, error } = await supabase
     .from('tickets')

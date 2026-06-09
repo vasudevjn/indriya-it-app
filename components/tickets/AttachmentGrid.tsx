@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
   View, StyleSheet, Image, TouchableOpacity, Modal,
-  Dimensions, Linking,
+  Dimensions, Linking, Text,
 } from 'react-native';
-import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { DbTicketAttachment } from '../../types';
 import { getAttachmentUrl } from '../../lib/api/tickets';
+import { theme } from '../../constants/theme';
 
 interface Props {
   attachments: DbTicketAttachment[];
@@ -24,7 +24,7 @@ function getFileIcon(fileType: DbTicketAttachment['file_type']): keyof typeof Io
 function getFileColor(fileType: DbTicketAttachment['file_type']): string {
   if (fileType === 'video') return '#7C3AED';
   if (fileType === 'document') return '#D97706';
-  return '#1B3A7A';
+  return theme.colors.brand;
 }
 
 function AttachmentThumb({
@@ -63,7 +63,13 @@ function AttachmentThumb({
 export function AttachmentGrid({ attachments }: Props) {
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
-  if (!attachments.length) return null;
+  if (!attachments.length) {
+    return (
+      <View style={styles.empty}>
+        <Text style={styles.emptyText}>No attachments</Text>
+      </View>
+    );
+  }
 
   const handlePress = (att: DbTicketAttachment) => {
     const url = getAttachmentUrl(att.storage_path);
@@ -71,7 +77,6 @@ export function AttachmentGrid({ attachments }: Props) {
     if (isImage) {
       setLightboxUrl(url);
     } else {
-      // Open video or document in external browser / player
       Linking.openURL(url).catch(() => null);
     }
   };
@@ -84,7 +89,6 @@ export function AttachmentGrid({ attachments }: Props) {
         ))}
       </View>
 
-      {/* Image lightbox */}
       <Modal
         visible={!!lightboxUrl}
         transparent
@@ -112,31 +116,38 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    paddingHorizontal: 16,
+    gap: theme.spacing.sm - 2,
   },
   thumbWrap: {
     width: ITEM_SIZE,
     height: ITEM_SIZE,
-    borderRadius: 10,
+    borderRadius: theme.radius.sm,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   thumb: {
     width: '100%',
     height: '100%',
   },
   fileTile: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: theme.colors.surface2,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    gap: 4,
+    gap: theme.spacing.xs,
   },
   fileLabel: {
     fontSize: 11,
     fontWeight: '600',
     letterSpacing: 0.5,
+  },
+  empty: {
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 13,
+    color: theme.colors.textTertiary,
   },
   overlay: {
     flex: 1,

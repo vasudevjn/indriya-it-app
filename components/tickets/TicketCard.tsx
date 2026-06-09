@@ -1,84 +1,88 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Card, Text } from 'react-native-paper';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { router } from 'expo-router';
 import { TicketWithRelations } from '../../types/ticket';
 import { StatusChip } from '../common/StatusChip';
 import { PriorityBadge } from '../common/PriorityBadge';
 import { timeAgo } from '../../lib/utils/date';
+import { theme } from '../../constants/theme';
 
 interface Props {
   ticket: TicketWithRelations;
 }
 
 export function TicketCard({ ticket }: Props) {
+  const accentColor = theme.statusColors[ticket.status].accent;
+
   return (
     <TouchableOpacity onPress={() => router.push(`/tickets/${ticket.id}`)}>
-      <Card style={styles.card} mode="outlined">
-        <Card.Content>
-          <View style={styles.header}>
-            <Text variant="labelLarge" style={styles.number}>{ticket.ticket_number}</Text>
-            <View style={styles.badges}>
+      <View style={[styles.card, theme.shadows.sm]}>
+        <View style={[styles.strip, { backgroundColor: accentColor }]} />
+        <View style={styles.content}>
+          <View style={styles.topRow}>
+            <View style={styles.leftMeta}>
               <PriorityBadge priority={ticket.priority} />
-              <StatusChip status={ticket.status} small />
+              <Text style={styles.ticketNumber}>{ticket.ticket_number}</Text>
             </View>
+            <StatusChip status={ticket.status} small />
           </View>
-          <Text variant="bodyMedium" numberOfLines={2} style={styles.description}>
+
+          <Text style={styles.description} numberOfLines={2}>
             {ticket.description}
           </Text>
-          <View style={styles.footer}>
-            <Text variant="labelSmall" style={styles.meta}>
-              {ticket.store?.name ?? 'Unknown Store'}
-            </Text>
-            <Text variant="labelSmall" style={styles.meta}>
-              {timeAgo(ticket.created_at)}
-            </Text>
-          </View>
-          {ticket.assignee && (
-            <Text variant="labelSmall" style={styles.assignee}>
-              Assigned: {ticket.assignee.full_name}
-            </Text>
-          )}
-        </Card.Content>
-      </Card>
+
+          <Text style={styles.timeAgo}>{timeAgo(ticket.created_at)}</Text>
+        </View>
+      </View>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 16,
+    flexDirection: 'row',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    marginHorizontal: theme.spacing.lg,
     marginVertical: 6,
-    backgroundColor: '#fff',
   },
-  header: {
+  strip: {
+    width: 4,
+    borderTopLeftRadius: theme.radius.md,
+    borderBottomLeftRadius: theme.radius.md,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+  },
+  topRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: theme.spacing.sm,
   },
-  number: {
-    color: '#1B3A7A',
-    fontWeight: '700',
-  },
-  badges: {
+  leftMeta: {
     flexDirection: 'row',
-    gap: 6,
     alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  ticketNumber: {
+    fontFamily: 'DM Mono',
+    fontWeight: '600',
+    fontSize: 13,
+    color: theme.colors.brand,
   },
   description: {
-    color: '#374151',
-    marginBottom: 8,
+    fontWeight: '500',
+    fontSize: 14,
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.sm,
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  meta: {
-    color: '#9CA3AF',
-  },
-  assignee: {
-    color: '#6B7280',
-    marginTop: 4,
+  timeAgo: {
+    fontSize: 12,
+    color: theme.colors.textTertiary,
   },
 });

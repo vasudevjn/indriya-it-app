@@ -75,6 +75,7 @@ export function useUpdateTicket(ticketId: string) {
       assignee_id?: string;
       resolution?: string;
       resolved_at?: string;
+      description?: string;
     }) => updateTicket(ticketId, updates),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.ticket(ticketId) });
@@ -153,8 +154,8 @@ export function useAssignTicket(ticketId: string, requesterId: string) {
       await createNotification({
         recipient_id: requesterId,
         ticket_id: ticketId,
-        title: `Ticket ${ticket.ticket_number} Assigned`,
-        body: `Your ticket has been assigned to ${profile.full_name}`,
+        title: `Ticket Assigned`,
+        body: `Your ticket ${ticket.ticket_number} has been assigned to ${profile.full_name}`,
         type: 'ticket_assigned',
       });
       return ticket;

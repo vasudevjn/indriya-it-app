@@ -7,6 +7,7 @@ import { AppHeader } from '../../components/common/AppHeader';
 import { supabase } from '../../lib/supabase';
 import { isValidEmail } from '../../lib/utils/validation';
 import { extractErrorMessage } from '../../lib/utils/error';
+import { theme } from '../../constants/theme';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -28,7 +29,7 @@ export default function ForgotPassword() {
     return (
       <Screen>
         <View style={styles.successContainer}>
-          <Ionicons name="mail-outline" size={64} color="#1B3A7A" />
+          <Ionicons name="mail-outline" size={64} color={theme.colors.brand} />
           <Text variant="titleLarge" style={styles.successTitle}>Check your email</Text>
           <Text variant="bodyMedium" style={styles.successBody}>
             We've sent a password reset link to {email}
@@ -40,7 +41,7 @@ export default function ForgotPassword() {
 
   return (
     <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Forgot Password" showBack />
+      <AppHeader title="Forgot password" showBack />
       <View style={styles.container}>
         <Text variant="bodyMedium" style={styles.subtitle}>
           Enter your email address and we'll send you a link to reset your password.
@@ -54,8 +55,8 @@ export default function ForgotPassword() {
           autoCapitalize="none"
           mode="outlined"
           style={styles.input}
-          outlineColor="#E5E7EB"
-          activeOutlineColor="#1B3A7A"
+          outlineColor={theme.colors.border}
+          activeOutlineColor={theme.colors.brand}
           left={<TextInput.Icon icon="email-outline" />}
         />
         <Button
@@ -63,10 +64,10 @@ export default function ForgotPassword() {
           onPress={handleReset}
           loading={loading}
           disabled={loading}
-          buttonColor="#1B3A7A"
+          buttonColor={theme.colors.brand}
           style={styles.btn}
         >
-          Send Reset Link
+          Send reset link
         </Button>
       </View>
     </Screen>
@@ -75,41 +76,41 @@ export default function ForgotPassword() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 24,
+    padding: theme.spacing.xxl,
   },
   subtitle: {
-    color: '#6B7280',
-    marginBottom: 20,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xl,
     lineHeight: 22,
   },
   error: {
-    color: '#EF4444',
-    backgroundColor: '#FEE2E2',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    color: theme.colors.error,
+    backgroundColor: theme.colors.errorBg,
+    padding: theme.spacing.md,
+    borderRadius: theme.radius.sm,
+    marginBottom: theme.spacing.md,
     fontSize: 14,
   },
   input: {
-    marginBottom: 12,
-    backgroundColor: '#fff',
+    marginBottom: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
   },
   btn: {
-    borderRadius: 8,
+    borderRadius: theme.radius.sm,
   },
   successContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
-    gap: 16,
+    padding: theme.spacing.lg * 2,
+    gap: theme.spacing.lg,
   },
   successTitle: {
     fontWeight: '700',
-    color: '#111827',
+    color: theme.colors.textPrimary,
   },
   successBody: {
-    color: '#6B7280',
+    color: theme.colors.textSecondary,
     textAlign: 'center',
   },
 });

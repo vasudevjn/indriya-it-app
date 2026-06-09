@@ -1,5 +1,5 @@
 import '../global.css';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Stack, router } from 'expo-router';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { PaperProvider, MD3LightTheme } from 'react-native-paper';
@@ -40,6 +40,14 @@ function AuthGate() {
   const profile = useAuthStore((s) => s.profile);
   const isLoading = useAuthStore((s) => s.isLoading);
 
+  /**
+   * Track the last navigation destination so that React 18 Strict Mode's
+   * double-invocation of effects never fires router.replace() twice for the
+   * same auth state.  Without this guard, the second call remounts the login
+   * screen mid-interaction and kills TextInput focus.
+   */
+  const lastNav = useRef<string | null>(null);
+
   useRealtimeNotifications(profile?.id ?? '');
 
   /**
@@ -70,23 +78,37 @@ function AuthGate() {
     if (isLoading) return;
 
     if (!session) {
-      router.replace('/(auth)/login');
+      if (lastNav.current !== 'login') {
+        lastNav.current = 'login';
+        router.replace('/(auth)/login');
+      }
       return;
     }
 
     if (!profile) return;
 
+    // Determine the destination key so we can skip duplicate navigations.
+    let dest: string;
     if (profile.role === 'requester' && profile.approval_status === 'approved') {
-      router.replace('/(requester)/home');
+      dest = 'requester';
     } else if (profile.role === 'technician' && profile.approval_status === 'approved') {
-      router.replace('/(technician)/home');
+      dest = 'technician';
     } else if (profile.role === 'admin') {
-      router.replace('/(admin)/home');
+      dest = 'admin';
     } else if (profile.role === 'technician' && profile.approval_status === 'pending') {
-      router.replace('/pending-approval');
+      dest = 'pending';
     } else {
-      router.replace('/(auth)/login');
+      dest = 'login';
     }
+
+    if (lastNav.current === dest) return; // already navigated here — skip (covers Strict Mode re-run)
+    lastNav.current = dest;
+
+    if (dest === 'requester') router.replace('/(requester)/home');
+    else if (dest === 'technician') router.replace('/(technician)/home');
+    else if (dest === 'admin') router.replace('/(admin)/home');
+    else if (dest === 'pending') router.replace('/pending-approval');
+    else router.replace('/(auth)/login');
   }, [isLoading, session, profile]);
 
   if (isLoading) return <LoadingOverlay message="Loading..." />;
@@ -101,7 +123,7 @@ export default function RootLayout() {
           <StatusBar style="auto" backgroundColor="#1B3A7A" />
           <Stack screenOptions={{
             headerShown: false,
-            statusBarStyle: 'dark',
+            statusBarStyle: 'light',
           }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="(auth)" />

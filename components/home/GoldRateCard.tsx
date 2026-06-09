@@ -1,31 +1,33 @@
 import React from 'react';
 import {
-  View, StyleSheet, TouchableOpacity, ActivityIndicator,
+  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
-import { Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { useGoldRate } from '../../hooks/useGoldRate';
 import { timeAgo } from '../../lib/utils/date';
-
-const GOLD = '#C9A46A';
-const GOLD_LIGHT = '#F5ECD8';
-const NAVY_DARK = '#142D60';
+import { theme } from '../../constants/theme';
 
 // Indian Rupee sign (U+20B9) constructed at runtime to keep source file ASCII-only
 // Raw Unicode chars in JSX text nodes can confuse Metro/Hermes on some Android builds
 const RUPEE = String.fromCharCode(0x20B9);
 
-function RateColumn({ karat, rate }: { karat: string; rate: number }) {
+interface RateColumnProps {
+  karat: string;
+  rate: number;
+  isLast: boolean;
+}
+
+function RateColumn({ karat, rate, isLast }: RateColumnProps) {
   return (
-    <View style={styles.rateColumn}>
-      <View style={styles.karatBadge}>
-        <Text style={styles.karatText}>{karat}</Text>
+    <React.Fragment>
+      <View style={styles.rateColumn}>
+        <Text style={styles.karatLabel}>{karat}</Text>
+        <Text style={styles.rateValue}>
+          {RUPEE}{rate.toLocaleString('en-IN')}
+        </Text>
       </View>
-      <Text style={styles.rateValue}>
-        {RUPEE}{rate.toLocaleString('en-IN')}
-      </Text>
-      <Text style={styles.rateUnit}>per gram</Text>
-    </View>
+      {!isLast && <View style={styles.verticalDivider} />}
+    </React.Fragment>
   );
 }
 
@@ -33,14 +35,14 @@ export function GoldRateCard() {
   const { data: rate, isLoading, refetch, isRefetching } = useGoldRate();
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, theme.shadows.md]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.goldIconWrap}>
-            <Ionicons name="trending-up" size={18} color={GOLD} />
+            <Ionicons name="trending-up" size={18} color={theme.colors.accent} />
           </View>
-          <Text style={styles.cardTitle}>Gold Rate Today</Text>
+          <Text style={styles.cardTitle}>Gold Rate</Text>
         </View>
         <TouchableOpacity
           onPress={() => refetch()}
@@ -49,25 +51,26 @@ export function GoldRateCard() {
           hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
         >
           {isRefetching ? (
-            <ActivityIndicator size="small" color={GOLD} />
+            <ActivityIndicator size="small" color={theme.colors.accent} />
           ) : (
-            <Ionicons name="refresh-outline" size={18} color={GOLD} />
+            <Ionicons name="refresh-outline" size={18} color={theme.colors.accent} />
           )}
         </TouchableOpacity>
       </View>
 
       {/* Content */}
       {isLoading ? (
-        <ActivityIndicator color={GOLD} style={{ marginVertical: 20 }} />
+        <ActivityIndicator color={theme.colors.accent} style={{ marginVertical: theme.spacing.xl }} />
       ) : rate ? (
         <>
           <View style={styles.ratesRow}>
-            <RateColumn karat="22K" rate={rate.rate_22k} />
-            <View style={styles.verticalDivider} />
-            <RateColumn karat="24K" rate={rate.rate_24k} />
+            <RateColumn karat="24K (999)" rate={rate.rate_24k}     isLast={false} />
+            <RateColumn karat="24K (995)" rate={rate.rate_24k_995} isLast={false} />
+            <RateColumn karat="22K (916)" rate={rate.rate_22k}     isLast={false} />
+            <RateColumn karat="18K (750)" rate={rate.rate_18k}     isLast />
           </View>
           <View style={styles.footer}>
-            <Ionicons name="time-outline" size={12} color={GOLD} />
+            <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.35)" />
             <Text style={styles.updatedText}>
               {'Updated '}{timeAgo(rate.updated_at)}
             </Text>
@@ -75,7 +78,7 @@ export function GoldRateCard() {
         </>
       ) : (
         <View style={styles.noRateWrap}>
-          <Ionicons name="information-circle-outline" size={20} color={GOLD} />
+          <Ionicons name="information-circle-outline" size={20} color={theme.colors.accent} />
           <Text style={styles.noRateText}>
             Gold rate not set. Please contact your admin.
           </Text>
@@ -87,42 +90,34 @@ export function GoldRateCard() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: NAVY_DARK,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(201,164,106,0.3)',
-    shadowColor: NAVY_DARK,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
+    backgroundColor: theme.colors.brand,
+    borderRadius: theme.radius.md,
+    padding: theme.spacing.lg,
+    marginBottom: theme.spacing.lg,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: theme.spacing.lg,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: theme.spacing.sm,
   },
   goldIconWrap: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(201,164,106,0.15)',
+    backgroundColor: 'rgba(201,168,76,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
-    color: GOLD_LIGHT,
+    color: 'rgba(255,255,255,0.75)',
     fontSize: 14,
-    fontWeight: '700',
-    letterSpacing: 0.5,
+    fontWeight: '600',
   },
   refreshBtn: {
     width: 32,
@@ -133,62 +128,48 @@ const styles = StyleSheet.create({
   ratesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
-    marginBottom: 16,
+    marginBottom: theme.spacing.md,
   },
   rateColumn: {
-    alignItems: 'center',
     flex: 1,
-    gap: 6,
+    alignItems: 'center',
+    gap: theme.spacing.xs,
   },
-  karatBadge: {
-    backgroundColor: 'rgba(201,164,106,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(201,164,106,0.4)',
-  },
-  karatText: {
-    color: GOLD,
-    fontSize: 12,
+  karatLabel: {
+    color: theme.colors.accent,
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 0.3,
   },
   rateValue: {
-    color: '#FFFFFF',
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  rateUnit: {
-    color: 'rgba(255,255,255,0.45)',
-    fontSize: 11,
-    fontWeight: '500',
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
   verticalDivider: {
     width: 1,
-    height: 60,
-    backgroundColor: 'rgba(201,164,106,0.2)',
+    height: 36,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: theme.spacing.xs,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(201,164,106,0.15)',
-    paddingTop: 12,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    paddingTop: theme.spacing.md,
   },
   updatedText: {
-    color: 'rgba(201,164,106,0.7)',
+    color: 'rgba(255,255,255,0.35)',
     fontSize: 11,
     fontWeight: '500',
   },
   noRateWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingVertical: 12,
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
   },
   noRateText: {
     color: 'rgba(255,255,255,0.55)',

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import {
-  FlatList, View, StyleSheet, RefreshControl, ScrollView, TouchableOpacity,
+  FlatList, View, Text, StyleSheet, RefreshControl, TouchableOpacity,
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Text, Card } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
-import { Screen } from '../../components/common/Screen';
-import { AppHeader } from '../../components/common/AppHeader';
+import { router } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BroadcastForm } from '../../components/admin/BroadcastForm';
 import { GoldRateForm } from '../../components/admin/GoldRateForm';
 import { LoadingOverlay } from '../../components/common/LoadingOverlay';
@@ -20,97 +19,72 @@ import { useUiStore } from '../../stores/uiStore';
 import { formatDateTime } from '../../lib/utils/date';
 import { DbBroadcast } from '../../types';
 import { GoldRate } from '../../lib/api/goldRate';
+import { theme } from '../../constants/theme';
 
-// Rupee sign built at runtime to keep source file ASCII-only
 const RUPEE = String.fromCharCode(0x20B9);
-
 type AdminTab = 'broadcasts' | 'gold-rate';
 
-//  Broadcast item 
+type RateKey = 'rate_24k' | 'rate_24k_995' | 'rate_22k' | 'rate_18k';
+const RATE_COLS: Array<{ key: RateKey; label: string }> = [
+  { key: 'rate_24k',     label: '24K (999)' },
+  { key: 'rate_24k_995', label: '24K (995)' },
+  { key: 'rate_22k',     label: '22K (916)' },
+  { key: 'rate_18k',     label: '18K (750)' },
+];
+
+// ── Past broadcast item ───────────────────────────────────────────────────────
 
 function BroadcastItem({ item }: { item: DbBroadcast }) {
   return (
-    <Card style={styles.card} mode="outlined">
-      <Card.Content>
-        <Text variant="labelLarge" style={styles.cardTitle}>{item.title}</Text>
-        <Text variant="bodySmall" style={styles.cardBody}>{item.body}</Text>
-        <Text variant="labelSmall" style={styles.cardMeta}>
-          {formatDateTime(item.created_at)}
-          {item.target_store_id ? ' - Specific store' : ' - All stores'}
-        </Text>
-      </Card.Content>
-    </Card>
+    <View style={[styles.card, theme.shadows.sm]}>
+      <Text style={styles.cardTitle}>{item.title}</Text>
+      <Text style={styles.cardBody}>{item.body}</Text>
+      <Text style={styles.cardMeta}>
+        {formatDateTime(item.created_at)}
+        {item.target_store_id ? ' · Specific store' : ' · All stores'}
+      </Text>
+    </View>
   );
 }
 
-//  Gold rate history item 
+// ── Gold rate history item ────────────────────────────────────────────────────
 
 function RateHistoryItem({ item, isLatest }: { item: GoldRate; isLatest: boolean }) {
   return (
-    <Card style={[styles.card, isLatest && styles.latestCard]} mode="outlined">
-      <Card.Content style={styles.rateCardContent}>
-        {isLatest && (
-          <View style={styles.latestBadge}>
-            <Text style={styles.latestBadgeText}>Current</Text>
+    <View style={[styles.card, theme.shadows.sm]}>
+      <View style={styles.rateCardHeader}>
+        {isLatest ? (
+          <View style={styles.currentBadge}>
+            <Text style={styles.currentBadgeText}>Current</Text>
           </View>
+        ) : (
+          <View />
         )}
-        <View style={styles.rateRow}>
-          <View style={styles.rateCell}>
-            <Text style={styles.rateKarat}>22K</Text>
-            <Text style={[styles.rateVal, isLatest && styles.rateValCurrent]}>
-              {RUPEE}{item.rate_22k.toLocaleString('en-IN')}
+        <Text style={styles.rateTimestamp}>{formatDateTime(item.updated_at)}</Text>
+      </View>
+      <View style={styles.rateColumns}>
+        {RATE_COLS.map((col) => (
+          <View key={col.key} style={styles.rateColumn}>
+            <Text style={styles.rateColLabel}>{col.label}</Text>
+            <Text style={styles.rateColValue}>
+              {RUPEE}{item[col.key].toLocaleString('en-IN')}
             </Text>
           </View>
-          <View style={styles.rateDivider} />
-          <View style={styles.rateCell}>
-            <Text style={styles.rateKarat}>24K</Text>
-            <Text style={[styles.rateVal, isLatest && styles.rateValCurrent]}>
-              {RUPEE}{item.rate_24k.toLocaleString('en-IN')}
-            </Text>
-          </View>
-          <Text style={styles.rateMeta}>{formatDateTime(item.updated_at)}</Text>
-        </View>
-      </Card.Content>
-    </Card>
+        ))}
+      </View>
+    </View>
   );
 }
 
-//  Segmented control 
-
-interface TabButtonProps {
-  tab: AdminTab;
-  active: boolean;
-  icon: string;
-  label: string;
-  onPress: () => void;
-}
-
-function TabButton({ active, icon, label, onPress }: TabButtonProps) {
-  return (
-    <TouchableOpacity
-      style={[styles.tabBtn, active && styles.tabBtnActive]}
-      onPress={onPress}
-      activeOpacity={0.8}
-    >
-      <Ionicons
-        name={icon as keyof typeof Ionicons.glyphMap}
-        size={16}
-        color={active ? '#1B3A7A' : '#9CA3AF'}
-      />
-      <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
-
-//  Main screen 
+// ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function AdminBroadcasts() {
   const qc = useQueryClient();
   const showToast = useUiStore((s) => s.showToast);
   const { profile } = useCurrentUser();
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<AdminTab>('broadcasts');
 
-  // Broadcasts data
   const {
     data: broadcasts,
     isLoading: loadingBroadcasts,
@@ -133,7 +107,6 @@ export default function AdminBroadcasts() {
     onError: () => showToast('Failed to send broadcast', 'error'),
   });
 
-  // Gold rate history data
   const {
     data: rateHistory,
     isLoading: loadingRates,
@@ -145,28 +118,34 @@ export default function AdminBroadcasts() {
   if (loadingRates && activeTab === 'gold-rate') return <LoadingOverlay />;
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader title="Publish" />
-
-      {/* Segmented control */}
-      <View style={styles.tabBar}>
-        <TabButton
-          tab="broadcasts"
-          active={activeTab === 'broadcasts'}
-          icon="megaphone-outline"
-          label="Broadcasts"
-          onPress={() => setActiveTab('broadcasts')}
-        />
-        <TabButton
-          tab="gold-rate"
-          active={activeTab === 'gold-rate'}
-          icon="trending-up"
-          label="Gold Rate"
-          onPress={() => setActiveTab('gold-rate')}
-        />
+    <View style={styles.root}>
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.8}>
+          <Ionicons name="chevron-back" size={18} color="rgba(255,255,255,0.6)" />
+          <Text style={styles.backText}>Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Publish Announcement</Text>
       </View>
 
-      {/*  Broadcasts panel  */}
+      {/* Tab bar */}
+      <View style={styles.tabBar}>
+        {(['broadcasts', 'gold-rate'] as AdminTab[]).map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={styles.tabItem}
+            onPress={() => setActiveTab(tab)}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+              {tab === 'broadcasts' ? 'Broadcasts' : 'Gold rate'}
+            </Text>
+            {activeTab === tab && <View style={styles.tabIndicator} />}
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Broadcasts panel */}
       {activeTab === 'broadcasts' && (
         <FlatList
           data={broadcasts ?? []}
@@ -177,8 +156,8 @@ export default function AdminBroadcasts() {
             <RefreshControl
               refreshing={refetchingBroadcasts}
               onRefresh={refetchBroadcasts}
-              tintColor="#1B3A7A"
-              colors={['#1B3A7A']}
+              tintColor={theme.colors.brand}
+              colors={[theme.colors.brand]}
             />
           }
           ListHeaderComponent={
@@ -196,7 +175,7 @@ export default function AdminBroadcasts() {
         />
       )}
 
-      {/*  Gold Rate panel  */}
+      {/* Gold rate panel */}
       {activeTab === 'gold-rate' && (
         <FlatList
           data={rateHistory ?? []}
@@ -209,8 +188,8 @@ export default function AdminBroadcasts() {
             <RefreshControl
               refreshing={refetchingRates}
               onRefresh={refetchRates}
-              tintColor="#1B3A7A"
-              colors={['#1B3A7A']}
+              tintColor={theme.colors.brand}
+              colors={[theme.colors.brand]}
             />
           }
           ListHeaderComponent={<GoldRateForm />}
@@ -221,123 +200,141 @@ export default function AdminBroadcasts() {
           }
         />
       )}
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  /* Segmented control */
-  tabBar: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginVertical: 12,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    padding: 4,
-  },
-  tabBtn: {
+  root: {
     flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+
+  // Header
+  header: {
+    backgroundColor: theme.colors.brand,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+  },
+  backBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 8,
-    borderRadius: 9,
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.xs,
   },
-  tabBtnActive: {
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 2,
+  backText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 14,
+    fontWeight: '500',
   },
-  tabLabel: {
-    fontSize: 13,
+  headerTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+
+  // Tab bar
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: theme.spacing.md,
+    position: 'relative',
+  },
+  tabText: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#9CA3AF',
+    color: theme.colors.textTertiary,
   },
-  tabLabelActive: {
-    color: '#1B3A7A',
+  tabTextActive: {
+    color: theme.colors.brand,
+  },
+  tabIndicator: {
+    position: 'absolute',
+    bottom: 0,
+    left: theme.spacing.xl,
+    right: theme.spacing.xl,
+    height: 2,
+    backgroundColor: theme.colors.brand,
+    borderRadius: theme.radius.full,
   },
 
-  /* Lists */
+  // Lists
   list: {
-    paddingBottom: 32,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg * 2,
   },
 
-  /* Broadcast card */
+  // Past broadcast card
   card: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.md,
+    marginHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
   },
   cardTitle: {
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    marginBottom: theme.spacing.xs,
   },
   cardBody: {
-    color: '#374151',
-    marginBottom: 6,
+    color: theme.colors.textSecondary,
+    fontSize: 13,
+    marginBottom: theme.spacing.xs,
   },
   cardMeta: {
-    color: '#9CA3AF',
+    color: theme.colors.textTertiary,
+    fontSize: 12,
   },
 
-  /* Gold rate history card */
-  latestCard: {
-    borderColor: 'rgba(201,164,106,0.5)',
-    backgroundColor: '#FFFBEB',
+  // Rate history card
+  rateCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
   },
-  rateCardContent: {
-    paddingVertical: 4,
+  currentBadge: {
+    backgroundColor: theme.colors.accent + '26',
+    borderRadius: theme.radius.full,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
   },
-  latestBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(201,164,106,0.2)',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginBottom: 8,
-  },
-  latestBadgeText: {
-    color: '#92400E',
+  currentBadgeText: {
+    color: theme.colors.accent,
     fontSize: 11,
     fontWeight: '700',
   },
-  rateRow: {
+  rateTimestamp: {
+    color: theme.colors.textTertiary,
+    fontSize: 12,
+    marginLeft: 'auto',
+  },
+  rateColumns: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
   },
-  rateCell: {
+  rateColumn: {
+    flex: 1,
     alignItems: 'center',
-    minWidth: 70,
+    gap: theme.spacing.xs,
   },
-  rateKarat: {
-    color: '#9CA3AF',
+  rateColLabel: {
+    color: theme.colors.textTertiary,
     fontSize: 11,
     fontWeight: '600',
-    letterSpacing: 0.5,
   },
-  rateVal: {
-    color: '#374151',
-    fontSize: 17,
+  rateColValue: {
+    color: theme.colors.textPrimary,
+    fontSize: 13,
     fontWeight: '700',
-  },
-  rateValCurrent: {
-    color: '#92400E',
-  },
-  rateDivider: {
-    width: 1,
-    height: 32,
-    backgroundColor: '#E5E7EB',
-  },
-  rateMeta: {
-    flex: 1,
-    color: '#9CA3AF',
-    fontSize: 12,
-    textAlign: 'right',
   },
 });

@@ -1,25 +1,25 @@
 import React, { useRef } from 'react';
 import {
-  View, StyleSheet, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform,
-  Image, ScrollView, Alert, TextInput,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
+  KeyboardAvoidingView, Platform, Image, ScrollView, Alert, TextInput,
 } from 'react-native';
-import { Text, Button, Chip } from 'react-native-paper';
+import { Button } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { router } from 'expo-router';
-import { Screen } from '../components/common/Screen';
-import { AppHeader } from '../components/common/AppHeader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTicketDraftStore, AttachmentItem } from '../stores/ticketDraftStore';
 import { useCreateTicket } from '../hooks/useTicketActions';
 import { useCurrentUser } from '../hooks/useCurrentUser';
-import { ALL_PRIORITIES, PRIORITY_LABELS, PRIORITY_COLORS } from '../constants/ticket';
+import { ALL_PRIORITIES, PRIORITY_LABELS } from '../constants/ticket';
 import {
   ALL_CATEGORIES, CATEGORY_LABELS, SUBCATEGORIES,
   TicketCategory,
 } from '../constants/categories';
 import { classifyTicket } from '../lib/utils/categoryClassifier';
 import { TicketPriority } from '../types';
+import { theme } from '../constants/theme';
 
 interface ChatMessage {
   id: string;
@@ -28,6 +28,14 @@ interface ChatMessage {
 }
 
 const MAX_ATTACHMENTS = 5;
+
+/** Bg tints for selected priority pills (colours not in theme) */
+const PRIORITY_TINTS: Record<TicketPriority, string> = {
+  low: '#ECFDF5',
+  medium: '#FFFBEB',
+  high: '#FEF2F2',
+  critical: '#FFF7ED',
+};
 
 export default function CreateTicket() {
   const {
@@ -42,9 +50,9 @@ export default function CreateTicket() {
   const [inputText, setInputText] = React.useState('');
   const [inputFocused, setInputFocused] = React.useState(false);
   const flatListRef = useRef<FlatList>(null);
+  const insets = useSafeAreaInsets();
 
   const handleDiscard = () => {
-    // Only show confirmation if the user has made any progress
     const isDirty = step !== 'description' || messages.length > 0;
     if (!isDirty) {
       reset();
@@ -72,7 +80,7 @@ export default function CreateTicket() {
     setTimeout(() => flatListRef.current?.scrollToEnd({ animated: true }), 120);
   };
 
-  //  Step: description 
+  // Step: description
   const handleSend = () => {
     const text = inputText.trim();
     if (!text) return;
@@ -80,7 +88,6 @@ export default function CreateTicket() {
     setDescription(text);
     setInputText('');
 
-    // Classify and move to category step
     const { category: cat, subcategory: sub } = classifyTicket(text);
     setCategory(cat);
     setSubcategory(sub);
@@ -95,7 +102,7 @@ export default function CreateTicket() {
     }, 400);
   };
 
-  //  Step: category 
+  // Step: category
   const handleCategoryConfirm = () => {
     setStep('attachments');
     addMessage({
@@ -105,7 +112,7 @@ export default function CreateTicket() {
     scrollToEnd();
   };
 
-  //  Step: attachments 
+  // Step: attachments
   const handlePickPhoto = async () => {
     if (attachments.length >= MAX_ATTACHMENTS) return;
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -140,7 +147,6 @@ export default function CreateTicket() {
       type: ['application/pdf', 'application/msword', 'text/plain', '*/*'],
       copyToCacheDirectory: true,
     });
-    // expo-document-picker v12 uses { canceled, assets } API
     if (!result.canceled && result.assets?.[0]) {
       const asset = result.assets[0];
       addAttachment({
@@ -168,7 +174,7 @@ export default function CreateTicket() {
     scrollToEnd();
   };
 
-  //  Step: confirm 
+  // Step: confirm
   const handleSubmit = () => {
     if (!profile?.store_id) return;
     createTicket({
@@ -182,7 +188,7 @@ export default function CreateTicket() {
   };
 
   const allMessages: ChatMessage[] = [
-    { id: 'welcome', text: "Hello! Describe your IT issue and I'll raise a ticket for you.", sender: 'system' },
+    { id: 'welcome', text: "Hello! Describe your issue and I'll raise a ticket for you.", sender: 'system' },
     ...messages,
   ];
 
@@ -190,31 +196,43 @@ export default function CreateTicket() {
     <View style={item.sender === 'user' ? styles.msgRowUser : styles.msgRowSystem}>
       {item.sender === 'system' && (
         <View style={styles.botAvatar}>
-          <Ionicons name="hardware-chip-outline" size={14} color="#1B3A7A" />
+          <Ionicons name="hardware-chip-outline" size={14} color="#fff" />
         </View>
       )}
       <View style={[styles.bubble, item.sender === 'user' ? styles.userBubble : styles.systemBubble]}>
-        <Text style={item.sender === 'user' ? styles.userText : styles.systemText}>{item.text}</Text>
+        <Text style={item.sender === 'user' ? styles.userText : styles.systemText}>
+          {item.text}
+        </Text>
       </View>
     </View>
   );
 
   return (
-    <Screen edges={['top', 'left', 'right']}>
-      <AppHeader
-        title="New IT Ticket"
-        showBack
-        right={
-          <TouchableOpacity onPress={handleDiscard} style={styles.discardBtn}>
-            <Ionicons name="trash-outline" size={18} color="rgba(255,255,255,0.85)" />
-            <Text style={styles.discardText}>Discard</Text>
-          </TouchableOpacity>
-        }
-      />
+    <View style={styles.root}>
+      {/* 1. Header */}
+      <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
+        <TouchableOpacity style={styles.headerLeft} onPress={() => router.back()} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={22} color="rgba(255,255,255,0.8)" />
+        </TouchableOpacity>
+
+        {/* Absolutely centered title — pointerEvents none so touches reach the buttons */}
+        <View style={StyleSheet.absoluteFillObject} pointerEvents="none">
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>New Ticket</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity style={styles.headerRight} onPress={handleDiscard} activeOpacity={0.7}>
+          <Ionicons name="trash-outline" size={18} color="rgba(255,255,255,0.6)" />
+          <Text style={styles.discardText}>Discard</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 2 + 3. Chat area + input */}
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+        keyboardVerticalOffset={0}
       >
         <FlatList
           style={styles.chatBg}
@@ -226,72 +244,90 @@ export default function CreateTicket() {
           onContentSizeChange={scrollToEnd}
           ListFooterComponent={
             <>
-              {/* Priority chips -- visible through description + category steps */}
-              {(step === 'description' || step === 'category' || step === 'attachments') && (
-                <View style={styles.prioritySection}>
-                  <Text variant="labelMedium" style={styles.sectionLabel}>Priority:</Text>
-                  <View style={styles.chipRow}>
-                    {ALL_PRIORITIES.map((p) => (
-                      <Chip
-                        key={p}
-                        selected={priority === p}
-                        onPress={() => setPriority(p)}
-                        style={[styles.chip, priority === p && { backgroundColor: PRIORITY_COLORS[p] }]}
-                        textStyle={priority === p ? { color: '#fff' } : { color: PRIORITY_COLORS[p] }}
-                        compact
-                      >
-                        {PRIORITY_LABELS[p]}
-                      </Chip>
-                    ))}
+              {/* Priority selector card */}
+              {(step === 'category' || step === 'attachments') && (
+                <View style={styles.card}>
+                  <Text style={styles.priorityLabel}>PRIORITY</Text>
+                  <View style={styles.pillRow}>
+                    {ALL_PRIORITIES.map((p) => {
+                      const sel = priority === p;
+                      return (
+                        <TouchableOpacity
+                          key={p}
+                          style={[
+                            styles.pill,
+                            sel && {
+                              backgroundColor: PRIORITY_TINTS[p],
+                              borderColor: theme.priorityColors[p],
+                            },
+                          ]}
+                          onPress={() => setPriority(p)}
+                          activeOpacity={0.75}
+                        >
+                          <Text
+                            style={[
+                              styles.pillText,
+                              sel && { color: theme.priorityColors[p] },
+                            ]}
+                          >
+                            {PRIORITY_LABELS[p]}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
                   </View>
                 </View>
               )}
 
               {/* Category picker */}
               {step === 'category' && (
-                <View style={styles.categorySection}>
-                  <Text variant="labelMedium" style={styles.sectionLabel}>Category:</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.hScroll}>
-                    <View style={styles.chipRow}>
-                      {ALL_CATEGORIES.map((cat) => (
-                        <Chip
-                          key={cat}
-                          selected={category === cat}
-                          onPress={() => {
-                            setCategory(cat);
-                            setSubcategory(SUBCATEGORIES[cat][0]);
-                          }}
-                          style={[styles.chip, category === cat && styles.chipSelected]}
-                          textStyle={category === cat ? { color: '#fff' } : { color: '#374151' }}
-                          compact
-                        >
+                <View style={styles.card}>
+                  <Text style={styles.sectionLabel}>CATEGORY</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.hScrollContent}
+                  >
+                    {ALL_CATEGORIES.map((cat) => (
+                      <TouchableOpacity
+                        key={cat}
+                        style={[styles.catPill, category === cat && styles.catPillSelected]}
+                        onPress={() => {
+                          setCategory(cat);
+                          setSubcategory(SUBCATEGORIES[cat][0]);
+                        }}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={[styles.catPillText, category === cat && styles.catPillTextSelected]}>
                           {CATEGORY_LABELS[cat]}
-                        </Chip>
-                      ))}
-                    </View>
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                   </ScrollView>
 
-                  <Text variant="labelMedium" style={[styles.sectionLabel, { marginTop: 10 }]}>Sub-category:</Text>
-                  <View style={styles.chipRow}>
+                  <Text style={[styles.sectionLabel, { marginTop: theme.spacing.md }]}>
+                    SUB-CATEGORY
+                  </Text>
+                  <View style={styles.subCatRow}>
                     {SUBCATEGORIES[category].map((sub) => (
-                      <Chip
+                      <TouchableOpacity
                         key={sub}
-                        selected={subcategory === sub}
+                        style={[styles.catPill, subcategory === sub && styles.catPillSelected]}
                         onPress={() => setSubcategory(sub)}
-                        style={[styles.chip, subcategory === sub && styles.chipSelected]}
-                        textStyle={subcategory === sub ? { color: '#fff' } : { color: '#374151' }}
-                        compact
+                        activeOpacity={0.75}
                       >
-                        {sub}
-                      </Chip>
+                        <Text style={[styles.catPillText, subcategory === sub && styles.catPillTextSelected]}>
+                          {sub}
+                        </Text>
+                      </TouchableOpacity>
                     ))}
                   </View>
 
                   <Button
                     mode="contained"
-                    buttonColor="#1B3A7A"
+                    buttonColor={theme.colors.brand}
                     onPress={handleCategoryConfirm}
-                    style={[styles.actionBtn, { marginTop: 12 }]}
+                    style={styles.actionBtn}
                     icon="check"
                   >
                     Confirm Category
@@ -328,20 +364,22 @@ export default function CreateTicket() {
 
               {/* Attachment step actions */}
               {step === 'attachments' && (
-                <View style={styles.attachActions}>
+                <View style={styles.card}>
                   <View style={styles.attachBtnRow}>
                     <TouchableOpacity
                       style={[styles.attachTypeBtn, attachments.length >= MAX_ATTACHMENTS && styles.attachTypeBtnDisabled]}
                       onPress={handlePickPhoto}
                       disabled={attachments.length >= MAX_ATTACHMENTS}
+                      activeOpacity={0.75}
                     >
-                      <Ionicons name="camera-outline" size={22} color="#1B3A7A" />
+                      <Ionicons name="camera-outline" size={22} color={theme.colors.brand} />
                       <Text style={styles.attachTypeBtnLabel}>Photo</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[styles.attachTypeBtn, attachments.length >= MAX_ATTACHMENTS && styles.attachTypeBtnDisabled]}
                       onPress={handlePickVideo}
                       disabled={attachments.length >= MAX_ATTACHMENTS}
+                      activeOpacity={0.75}
                     >
                       <Ionicons name="videocam-outline" size={22} color="#7C3AED" />
                       <Text style={[styles.attachTypeBtnLabel, { color: '#7C3AED' }]}>Video</Text>
@@ -350,6 +388,7 @@ export default function CreateTicket() {
                       style={[styles.attachTypeBtn, attachments.length >= MAX_ATTACHMENTS && styles.attachTypeBtnDisabled]}
                       onPress={handlePickDocument}
                       disabled={attachments.length >= MAX_ATTACHMENTS}
+                      activeOpacity={0.75}
                     >
                       <Ionicons name="document-text-outline" size={22} color="#D97706" />
                       <Text style={[styles.attachTypeBtnLabel, { color: '#D97706' }]}>Document</Text>
@@ -359,11 +398,21 @@ export default function CreateTicket() {
                     {attachments.length}/{MAX_ATTACHMENTS} files attached
                   </Text>
                   <View style={styles.attachNavRow}>
-                    <Button mode="outlined" onPress={handleSkipAttachments} textColor="#6B7280">
+                    <Button
+                      mode="outlined"
+                      onPress={handleSkipAttachments}
+                      textColor={theme.colors.textSecondary}
+                      style={styles.actionBtn}
+                    >
                       Skip
                     </Button>
                     {attachments.length > 0 && (
-                      <Button mode="contained" buttonColor="#1B3A7A" onPress={handleContinueAttachments}>
+                      <Button
+                        mode="contained"
+                        buttonColor={theme.colors.brand}
+                        onPress={handleContinueAttachments}
+                        style={styles.actionBtn}
+                      >
                         Continue ({attachments.length})
                       </Button>
                     )}
@@ -373,32 +422,28 @@ export default function CreateTicket() {
 
               {/* Confirm step */}
               {step === 'confirm' && (
-                <View style={styles.confirmSection}>
-                  <View style={styles.summary}>
-                    <Text variant="labelLarge" style={styles.summaryTitle}>Summary</Text>
-                    <Text style={styles.summaryText}>{description}</Text>
-                    <View style={styles.summaryMeta}>
-                      <Text style={styles.summaryMetaLabel}>Category</Text>
-                      <Text style={styles.summaryMetaValue}>
-                        {CATEGORY_LABELS[category]}{' > '}{subcategory}
-                      </Text>
-                    </View>
-                    <View style={styles.summaryMeta}>
-                      <Text style={styles.summaryMetaLabel}>Priority</Text>
-                      <Text style={styles.summaryMetaValue}>{PRIORITY_LABELS[priority]}</Text>
-                    </View>
-                    <View style={styles.summaryMeta}>
-                      <Text style={styles.summaryMetaLabel}>Attachments</Text>
-                      <Text style={styles.summaryMetaValue}>{attachments.length}</Text>
-                    </View>
+                <View style={styles.card}>
+                  <View style={styles.summaryBlock}>
+                    <Text style={styles.summaryTitle}>Summary</Text>
+                    <Text style={styles.summaryDesc}>{description}</Text>
+                    {[
+                      { label: 'Category', value: `${CATEGORY_LABELS[category]} > ${subcategory}` },
+                      { label: 'Priority', value: PRIORITY_LABELS[priority] },
+                      { label: 'Attachments', value: String(attachments.length) },
+                    ].map(({ label, value }) => (
+                      <View key={label} style={styles.summaryRow}>
+                        <Text style={styles.summaryKey}>{label}</Text>
+                        <Text style={styles.summaryVal}>{value}</Text>
+                      </View>
+                    ))}
                   </View>
                   <Button
                     mode="contained"
                     onPress={handleSubmit}
                     loading={isPending}
                     disabled={isPending}
-                    buttonColor="#1B3A7A"
-                    style={styles.submitBtn}
+                    buttonColor={theme.colors.brand}
+                    style={styles.actionBtn}
                     icon="send"
                   >
                     Submit Ticket
@@ -409,15 +454,15 @@ export default function CreateTicket() {
           }
         />
 
-        {/* Description input bar */}
+        {/* 3. Input bar — only during description step */}
         {step === 'description' && (
           <View style={styles.inputBar}>
             <View style={[styles.inputWrap, inputFocused && styles.inputWrapFocused]}>
               <TextInput
                 value={inputText}
                 onChangeText={setInputText}
-                placeholder="Describe your IT issue…"
-                placeholderTextColor="#9CA3AF"
+                placeholder="Describe your issue"
+                placeholderTextColor={theme.colors.textTertiary}
                 multiline
                 style={styles.chatInput}
                 onFocus={() => setInputFocused(true)}
@@ -435,165 +480,331 @@ export default function CreateTicket() {
           </View>
         )}
       </KeyboardAvoidingView>
-    </Screen>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  chatBg: {
-    backgroundColor: '#EDF1F8',
+  root: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
   },
-  chatArea: {
-    padding: 14,
-    paddingBottom: 8,
-    gap: 2,
+  flex: {
+    flex: 1,
   },
 
+  // ── Header ─────────────────────────────────────────────────────────────────
+  header: {
+    backgroundColor: theme.colors.brand,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
+  },
+  headerLeft: {
+    padding: theme.spacing.sm,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 18,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    padding: theme.spacing.sm,
+  },
+  discardText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+
+  // ── Chat area ─────────────────────────────────────────────────────────────
+  chatBg: {
+    backgroundColor: theme.colors.bg,
+  },
+  chatArea: {
+    padding: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+
+  // System message row
   msgRowSystem: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 6,
-    marginBottom: 6,
+    gap: theme.spacing.sm - 2,
   },
   msgRowUser: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    marginBottom: 6,
   },
+
+  // System avatar: square, brand bg, radius sm
   botAvatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#E0EAF6',
+    width: 30,
+    height: 30,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
     marginBottom: 2,
   },
+
+  // Bubble base
   bubble: {
     maxWidth: '78%',
-    borderRadius: 18,
-    paddingHorizontal: 13,
-    paddingVertical: 9,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.07,
-    shadowRadius: 3,
-    elevation: 1,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    ...theme.shadows.sm,
   },
-  userBubble: {
-    backgroundColor: '#1B3A7A',
-    borderBottomRightRadius: 4,
-  },
+
+  // System bubble: surface bg, border, left tail (top-left sharp)
   systemBubble: {
-    backgroundColor: '#fff',
-    borderBottomLeftRadius: 4,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: theme.radius.md,
+    borderBottomLeftRadius: theme.radius.md,
+    borderBottomRightRadius: theme.radius.md,
   },
-  userText: { color: '#fff', fontSize: 14, lineHeight: 20 },
-  systemText: { color: '#374151', fontSize: 14, lineHeight: 20 },
 
-  // Priority + category shared
-  prioritySection: { marginVertical: 8 },
-  categorySection: { marginVertical: 8 },
-  sectionLabel: { color: '#6B7280', marginBottom: 6 },
-  chipRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  hScroll: { marginBottom: 4 },
-  chip: { borderRadius: 20, backgroundColor: '#F3F4F6' },
-  chipSelected: { backgroundColor: '#1B3A7A' },
+  // User bubble: brand bg, right tail (bottom-right sharp)
+  userBubble: {
+    backgroundColor: theme.colors.brand,
+    borderTopLeftRadius: theme.radius.md,
+    borderTopRightRadius: theme.radius.md,
+    borderBottomLeftRadius: theme.radius.md,
+    borderBottomRightRadius: 3,
+  },
 
-  actionBtn: { borderRadius: 8 },
+  userText: {
+    color: '#fff',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  systemText: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
 
-  // Attachment previews
+  // ── Shared card ───────────────────────────────────────────────────────────
+  card: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.lg,
+    ...theme.shadows.sm,
+  },
+
+  // ── Priority card ─────────────────────────────────────────────────────────
+  priorityLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    marginBottom: theme.spacing.sm,
+  },
+  pillRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+  },
+  pill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    backgroundColor: theme.colors.surface2,
+    borderColor: theme.colors.border,
+  },
+  pillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textTertiary,
+  },
+
+  // ── Category card ─────────────────────────────────────────────────────────
+  sectionLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+    marginBottom: theme.spacing.sm,
+  },
+  hScrollContent: {
+    gap: theme.spacing.xs,
+    paddingBottom: theme.spacing.xs,
+  },
+  subCatRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+    marginBottom: theme.spacing.md,
+  },
+  catPill: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm - 2,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    backgroundColor: theme.colors.surface2,
+    borderColor: theme.colors.border,
+  },
+  catPillSelected: {
+    backgroundColor: theme.colors.brand,
+    borderColor: theme.colors.brand,
+  },
+  catPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textTertiary,
+  },
+  catPillTextSelected: {
+    color: '#fff',
+  },
+  actionBtn: {
+    borderRadius: theme.radius.md,
+    marginTop: theme.spacing.sm,
+  },
+
+  // ── Attachment previews ───────────────────────────────────────────────────
   attachPreview: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
-    marginVertical: 8,
+    gap: theme.spacing.sm,
   },
-  thumbWrap: { position: 'relative' },
-  thumb: { width: 80, height: 80, borderRadius: 8 },
-  fileThumb: {
-    backgroundColor: '#F3F4F6',
+  thumbWrap: {
+    position: 'relative',
+  },
+  thumb: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.radius.sm,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
+  },
+  fileThumb: {
+    backgroundColor: theme.colors.surface2,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: theme.spacing.xs,
   },
-  fileThumbLabel: { fontSize: 10, fontWeight: '700', color: '#6B7280' },
-  removeBtn: { position: 'absolute', top: -6, right: -6 },
+  fileThumbLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.textSecondary,
+  },
+  removeBtn: {
+    position: 'absolute',
+    top: -theme.spacing.sm + 2,
+    right: -theme.spacing.sm + 2,
+  },
 
-  // Attachment step
-  attachActions: { marginVertical: 8 },
-  attachBtnRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  // ── Attachment action card ────────────────────────────────────────────────
+  attachBtnRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.sm,
+  },
   attachTypeBtn: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 10,
-    paddingVertical: 12,
+    backgroundColor: theme.colors.surface2,
+    borderRadius: theme.radius.sm,
+    paddingVertical: theme.spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: theme.spacing.xs,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: theme.colors.border,
   },
-  attachTypeBtnDisabled: { opacity: 0.4 },
-  attachTypeBtnLabel: { fontSize: 12, fontWeight: '600', color: '#1B3A7A' },
-  attachCount: { color: '#9CA3AF', fontSize: 12, textAlign: 'center', marginBottom: 8 },
-  attachNavRow: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end' },
-
-  // Confirm summary
-  confirmSection: { marginTop: 8 },
-  summary: {
-    backgroundColor: '#EBF2FC',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#B8D0E8',
-    gap: 8,
+  attachTypeBtnDisabled: {
+    opacity: 0.4,
   },
-  summaryTitle: { color: '#1B3A7A', fontWeight: '700', marginBottom: 4 },
-  summaryText: { color: '#111827', fontSize: 14, lineHeight: 20 },
-  summaryMeta: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  summaryMetaLabel: { color: '#6B7280', fontSize: 13 },
-  summaryMetaValue: { color: '#111827', fontSize: 13, fontWeight: '500', flex: 1, textAlign: 'right' },
-  submitBtn: { borderRadius: 8 },
-
-  // Header discard button
-  discardBtn: {
+  attachTypeBtnLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.brand,
+  },
+  attachCount: {
+    color: theme.colors.textTertiary,
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  attachNavRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginRight: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    gap: theme.spacing.sm,
+    justifyContent: 'flex-end',
   },
-  discardText: {
-    color: 'rgba(255,255,255,0.85)',
+
+  // ── Confirm / summary card ────────────────────────────────────────────────
+  summaryBlock: {
+    backgroundColor: '#EBF2FC',
+    borderRadius: theme.radius.sm,
+    padding: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.borderStrong,
+    gap: theme.spacing.sm,
+  },
+  summaryTitle: {
+    color: theme.colors.brand,
+    fontWeight: '700',
+    fontSize: 13,
+    marginBottom: theme.spacing.xs,
+  },
+  summaryDesc: {
+    color: theme.colors.textPrimary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  summaryKey: {
+    color: theme.colors.textTertiary,
+    fontSize: 13,
+  },
+  summaryVal: {
+    color: theme.colors.textPrimary,
     fontSize: 13,
     fontWeight: '500',
+    flex: 1,
+    textAlign: 'right',
   },
 
-  // Description input
+  // ── Input bar ─────────────────────────────────────────────────────────────
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingHorizontal: 12,
-    paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 14 : 12,
-    backgroundColor: '#fff',
+    paddingHorizontal: theme.spacing.md,
+    paddingTop: theme.spacing.sm + 2,
+    paddingBottom: Platform.OS === 'ios' ? theme.spacing.md + 2 : theme.spacing.md,
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
-    gap: 8,
+    borderTopColor: theme.colors.border,
+    gap: theme.spacing.sm,
   },
   inputWrap: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 24,
+    backgroundColor: theme.colors.surface2,
+    borderRadius: theme.radius.full,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    paddingHorizontal: 16,
+    borderColor: theme.colors.border,
+    paddingHorizontal: theme.spacing.lg,
     paddingTop: Platform.OS === 'ios' ? 11 : 9,
     paddingBottom: Platform.OS === 'ios' ? 11 : 9,
     minHeight: 48,
@@ -601,11 +812,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputWrapFocused: {
-    borderColor: '#1B3A7A',
+    borderColor: theme.colors.brand,
   },
   chatInput: {
     fontSize: 15,
-    color: '#111827',
+    color: theme.colors.textPrimary,
     padding: 0,
     margin: 0,
     maxHeight: 108,
@@ -616,10 +827,14 @@ const styles = StyleSheet.create({
   sendBtn: {
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: theme.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendBtnActive: { backgroundColor: '#1B3A7A' },
-  sendBtnIdle: { backgroundColor: '#D1D5DB' },
+  sendBtnActive: {
+    backgroundColor: theme.colors.brand,
+  },
+  sendBtnIdle: {
+    backgroundColor: theme.colors.borderStrong,
+  },
 });
