@@ -1,115 +1,75 @@
 export type TicketCategory =
-  | 'hardware'
-  | 'software'
-  | 'network'
-  | 'printer'
-  | 'pos'
-  | 'cctv'
-  | 'email'
-  | 'access'
-  | 'phone'
-  | 'other';
+  | 'application_issues'
+  | 'data_and_reporting'
+  | 'data_sync_issue'
+  | 'digital_issues'
+  | 'facility_maintenance'
+  | 'franchisee_service'
+  | 'infrastructure_issues';
 
 export const CATEGORY_LABELS: Record<TicketCategory, string> = {
-  hardware: 'Hardware',
-  software: 'Software',
-  network: 'Network / Internet',
-  printer: 'Printer / Scanner',
-  pos: 'POS / Billing',
-  cctv: 'CCTV / Security',
-  email: 'Email / Communication',
-  access: 'Access / Permissions',
-  phone: 'Phone / Mobile',
-  other: 'Other',
+  application_issues: 'Application Issues',
+  data_and_reporting: 'Data and Reporting',
+  data_sync_issue: 'Data Sync Issue',
+  digital_issues: 'Digital Issues',
+  facility_maintenance: 'Facility / Maintenance Issues',
+  franchisee_service: 'Franchisee Service',
+  infrastructure_issues: 'Infrastructure Issues',
 };
 
 export const CATEGORY_ICONS: Record<TicketCategory, string> = {
-  hardware: 'desktop-outline',
-  software: 'code-slash-outline',
-  network: 'wifi-outline',
-  printer: 'print-outline',
-  pos: 'card-outline',
-  cctv: 'videocam-outline',
-  email: 'mail-outline',
-  access: 'key-outline',
-  phone: 'phone-portrait-outline',
-  other: 'help-circle-outline',
+  application_issues: 'apps-outline',
+  data_and_reporting: 'bar-chart-outline',
+  data_sync_issue: 'sync-outline',
+  digital_issues: 'globe-outline',
+  facility_maintenance: 'construct-outline',
+  franchisee_service: 'business-outline',
+  infrastructure_issues: 'server-outline',
 };
 
 export const ALL_CATEGORIES: TicketCategory[] = [
-  'hardware', 'software', 'network', 'printer', 'pos',
-  'cctv', 'email', 'access', 'phone', 'other',
+  'application_issues',
+  'data_and_reporting',
+  'data_sync_issue',
+  'digital_issues',
+  'facility_maintenance',
+  'franchisee_service',
+  'infrastructure_issues',
 ];
 
 export const SUBCATEGORIES: Record<TicketCategory, string[]> = {
-  hardware: [
-    'Desktop / Laptop',
-    'Monitor / Display',
-    'Keyboard / Mouse',
-    'UPS / Power',
-    'Hard Drive / Storage',
-  ],
-  software: [
-    'Application Crash',
-    'Installation / Upgrade',
-    'License Issue',
-    'Slow Performance',
-    'Operating System',
-  ],
-  network: [
-    'No Internet',
-    'Slow Connection',
-    'Wi-Fi Issue',
-    'VPN',
-    'Network Cable',
-  ],
-  printer: [
-    'Not Printing',
-    'Paper Jam',
-    'Driver Issue',
-    'Scanner Problem',
-    'Ink / Toner',
-  ],
-  pos: [
-    'Billing Error',
-    'POS Crash',
-    'Card Machine',
-    'Barcode Scanner',
-    'POS Printer',
-  ],
-  cctv: [
-    'Camera Offline',
-    'Recording Issue',
-    'DVR / NVR Problem',
-    'Camera Angle',
-    'Live View Issue',
-  ],
-  email: [
-    'Cannot Send',
-    'Cannot Receive',
-    'Account Setup',
-    'Password Reset',
-    'Spam Issue',
-  ],
-  access: [
-    'Account Locked',
-    'Permission Denied',
-    'New User Setup',
-    'Password Change',
-    'Software Access',
-  ],
-  phone: [
-    'No Signal',
-    'Call Quality',
-    'Mobile Data',
-    'App Issue',
-    'Device Repair',
-  ],
-  other: [
-    'General Query',
-    'Maintenance Request',
-    'Replacement Request',
-    'Training Request',
+  application_issues: [
+    'ERP - Finance',
+    'ERP - ISCM',
+    'ERP - Merch',
+    'Marketing',
+    'POS',
+    'Power BI',
     'Other',
+  ],
+  data_and_reporting: [
+    'Data and Reporting - Issues',
+  ],
+  data_sync_issue: [
+    'ERP-DW Data Issues',
+  ],
+  digital_issues: [
+    'Indriya Website',
+    'Saksham',
+    'Solitaire',
+    'Sparkle',
+  ],
+  facility_maintenance: [
+    'Facility Equipment Incident',
+  ],
+  franchisee_service: [
+    'Franchisee Incident',
+  ],
+  infrastructure_issues: [
+    'Email',
+    'Hardware',
+    'Infosecurity',
+    'Network',
+    'Software',
   ],
 };
