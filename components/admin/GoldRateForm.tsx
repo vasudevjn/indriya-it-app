@@ -6,10 +6,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { useGoldRate } from '../../hooks/useGoldRate';
 import { postGoldRate } from '../../lib/api/goldRate';
-import { createBroadcast } from '../../lib/api/broadcasts';
+import { notifyBroadcast } from '../../lib/api/notifications';
 import { QUERY_KEYS } from '../../constants/queryKeys';
 import { useUiStore } from '../../stores/uiStore';
-import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { theme } from '../../constants/theme';
 
 const RUPEE = String.fromCharCode(0x20B9);
@@ -30,7 +29,6 @@ export function GoldRateForm() {
   const qc = useQueryClient();
   const showToast = useUiStore((s) => s.showToast);
   const { data: currentRate } = useGoldRate();
-  const { profile } = useCurrentUser();
 
   const [rate24k,    setRate24k]    = useState('');
   const [rate24k995, setRate24k995] = useState('');
@@ -110,21 +108,13 @@ export function GoldRateForm() {
       // 1. Save rate
       await postGoldRate(r22, r24);
 
-      // 2. Always send push + create broadcast (not optional)
-      if (profile) {
-        const body = `22K: ${formatRate(r22)} | 24K: ${formatRate(r24)} per gram`;
-        await createBroadcast({
-          sender_id: profile.id,
-          title: 'Gold Rate Updated',
-          body,
-          // no target_store_ids = all stores
-        }).catch(() => null);
-      }
+      // 2. Push notify all stores (fire-and-forget — does NOT create a broadcast record)
+      const body = `22K: ${formatRate(r22)} | 24K: ${formatRate(r24)} per gram`;
+      notifyBroadcast('Gold Rate Updated', body).catch(() => null);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.goldRate() });
       qc.invalidateQueries({ queryKey: QUERY_KEYS.goldRateHistory() });
-      qc.invalidateQueries({ queryKey: QUERY_KEYS.broadcasts() });
       showToast('Gold rate updated and stores notified!', 'success');
     },
     onError: (err: unknown) => {

@@ -114,7 +114,7 @@ export default function AdminHome() {
             iconName="megaphone-outline"
             iconColor={theme.colors.accent}
             iconBg={theme.colors.accent + '26'}
-            title="Publish announcement"
+            title="Publish Announcement"
             subtitle="Send broadcast or update gold rate"
             subtitleColor={theme.colors.textTertiary}
             onPress={() => router.push('/(admin)/broadcasts')}

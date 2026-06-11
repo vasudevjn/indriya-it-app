@@ -142,7 +142,7 @@ export default function AdminBroadcasts() {
             activeOpacity={0.8}
           >
             <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-              {tab === 'broadcasts' ? 'Broadcasts' : 'Gold rate'}
+              {tab === 'broadcasts' ? 'Broadcasts' : 'Gold Rate'}
             </Text>
             {activeTab === tab && <View style={styles.tabIndicator} />}
           </TouchableOpacity>
@@ -165,11 +165,16 @@ export default function AdminBroadcasts() {
             />
           }
           ListHeaderComponent={
-            <BroadcastForm
-              stores={stores ?? []}
-              onSubmit={(p) => sendMutation.mutate(p)}
-              isLoading={sendMutation.isPending}
-            />
+            <>
+              <BroadcastForm
+                stores={stores ?? []}
+                onSubmit={(p) => sendMutation.mutate(p)}
+                isLoading={sendMutation.isPending}
+              />
+              {(broadcasts?.length ?? 0) > 0 && (
+                <Text style={styles.sectionTitle}>Past Broadcasts</Text>
+              )}
+            </>
           }
           ListEmptyComponent={
             broadcasts !== undefined ? (
@@ -196,7 +201,14 @@ export default function AdminBroadcasts() {
               colors={[theme.colors.brand]}
             />
           }
-          ListHeaderComponent={<GoldRateForm />}
+          ListHeaderComponent={
+            <>
+              <GoldRateForm />
+              {(rateHistory?.length ?? 0) > 0 && (
+                <Text style={styles.sectionTitle}>Past Updates</Text>
+              )}
+            </>
+          }
           ListEmptyComponent={
             rateHistory !== undefined ? (
               <EmptyState icon="trending-up" title="No rates set yet" />
@@ -275,6 +287,15 @@ const styles = StyleSheet.create({
   list: {
     paddingTop: theme.spacing.lg,
     paddingBottom: theme.spacing.lg * 2,
+  },
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.textTertiary,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginHorizontal: theme.spacing.lg,
+    marginBottom: theme.spacing.sm,
   },
 
   // Past broadcast card
