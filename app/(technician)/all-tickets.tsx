@@ -128,8 +128,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.brand,
   },
   header: {
+    height: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.lg,
-    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.brand,
   },
   headerTitle: {
     color: '#fff',

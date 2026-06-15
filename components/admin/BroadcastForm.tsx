@@ -47,7 +47,7 @@ export function BroadcastForm({ stores, onSubmit, isLoading }: Props) {
         <View style={styles.iconBox}>
           <Ionicons name="megaphone" size={18} color={theme.colors.brand} />
         </View>
-        <Text style={styles.cardTitle}>Send broadcast</Text>
+        <Text style={styles.cardTitle}>Send Broadcast</Text>
       </View>
 
       {/* Title input */}

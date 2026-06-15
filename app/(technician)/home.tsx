@@ -123,7 +123,7 @@ export default function TechnicianHome() {
             }
           />
           <StatCard
-            label="My active"
+            label="My Active"
             count={myActiveCount}
             accentColor={theme.statusColors.in_progress.accent}
             onPress={() =>

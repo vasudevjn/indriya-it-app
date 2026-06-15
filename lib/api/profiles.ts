@@ -55,9 +55,14 @@ export async function updateApprovalStatus(
   id: string,
   status: ApprovalStatus,
 ): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('profiles')
     .update({ approval_status: status })
-    .eq('id', id);
+    .eq('id', id)
+    .select('id');
   if (error) throw error;
+  // Supabase returns an empty array (no error) when RLS silently blocks the update.
+  if (!data || data.length === 0) {
+    throw new Error('Update blocked — check UPDATE RLS policy on profiles table');
+  }
 }

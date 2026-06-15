@@ -43,6 +43,24 @@ export interface CreateBroadcastPayload {
   target_store_ids?: string[];
 }
 
+/** Fetch the set of broadcast IDs this user has already read. */
+export async function getBroadcastReadIds(userId: string): Promise<Set<string>> {
+  const { data } = await supabase
+    .from('broadcast_reads')
+    .select('broadcast_id')
+    .eq('user_id', userId);
+  return new Set(((data ?? []) as { broadcast_id: string }[]).map((r) => r.broadcast_id));
+}
+
+/** Mark a list of broadcast IDs as read for the given user (idempotent). */
+export async function markBroadcastsRead(userId: string, broadcastIds: string[]): Promise<void> {
+  if (!broadcastIds.length) return;
+  const rows = broadcastIds.map((broadcast_id) => ({ user_id: userId, broadcast_id }));
+  await supabase
+    .from('broadcast_reads')
+    .upsert(rows, { onConflict: 'user_id,broadcast_id', ignoreDuplicates: true });
+}
+
 export async function createBroadcast(payload: CreateBroadcastPayload): Promise<DbBroadcast> {
   const insert: Record<string, unknown> = {
     sender_id: payload.sender_id,

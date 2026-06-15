@@ -3,20 +3,11 @@ import { useEffect } from 'react';
 import { QUERY_KEYS } from '../constants/queryKeys';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../lib/api/notifications';
 import { useNotificationStore } from '../stores/notificationStore';
+import { supabase } from '../lib/supabase';
 import { DbNotification } from '../types';
 
-/**
- * Fetch notifications and keep the global unread count in sync.
- *
- * staleTime is intentionally short (30 s) so that:
- *  - The badge updates when the app comes to the foreground (AppState wired in queryClient.ts)
- *  - The Notifications screen shows fresh data on every visit
- *
- * This hook is safe to call multiple times (QueryClient caches the result).
- * It is called from both AuthGate (_layout.tsx) -- for global badge initialisation --
- * and from each Notifications screen for the list view.
- */
 export function useNotifications(userId: string) {
+  const qc = useQueryClient();
   const setUnreadCount = useNotificationStore((s) => s.setUnreadCount);
 
   const query = useQuery({
@@ -26,11 +17,36 @@ export function useNotifications(userId: string) {
     staleTime: 30 * 1000,
   });
 
+  // Keep global unread badge in sync
   useEffect(() => {
     if (query.data) {
       setUnreadCount(query.data.filter((n: DbNotification) => !n.is_read).length);
     }
   }, [query.data]);
+
+  // Realtime: invalidate when a new notification row is inserted for this user
+  useEffect(() => {
+    if (!userId) return;
+
+    // Unique name per effect invocation avoids the v2.107 deduplication bug
+    // where channel() returns a still-joining channel from the previous cleanup.
+    const name = `notifs:${userId}:${Math.random().toString(36).slice(2, 9)}`;
+    const channel = supabase
+      .channel(name)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${userId}`,
+        },
+        () => { qc.invalidateQueries({ queryKey: QUERY_KEYS.notifications(userId) }); },
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
 
   return query;
 }

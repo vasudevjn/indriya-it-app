@@ -28,11 +28,15 @@ export default function AdminProfile() {
     <View style={styles.root}>
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + theme.spacing.sm }]}>
-        <TouchableOpacity style={styles.backRow} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={20} color="rgba(255,255,255,0.6)" />
-          <Text style={styles.backText}>Back</Text>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={22} color="rgba(255,255,255,0.8)" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Profile</Text>
+        <View style={[StyleSheet.absoluteFillObject, { paddingTop: insets.top + theme.spacing.sm, paddingBottom: theme.spacing.md }]} pointerEvents="none">
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>My Profile</Text>
+          </View>
+        </View>
+        <View style={styles.headerRight} />
       </View>
 
       {/* Body */}
@@ -93,25 +97,27 @@ const styles = StyleSheet.create({
   // ── Header ────────────────────────────────────────────────────────────────
   header: {
     backgroundColor: theme.colors.brand,
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.lg,
-    gap: theme.spacing.xs,
-  },
-  backRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: theme.spacing.xs,
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
   },
-  backText: {
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 15,
-    fontWeight: '500',
+  backBtn: {
+    padding: theme.spacing.sm,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    marginTop: theme.spacing.xs,
+  },
+  headerRight: {
+    width: 38,
   },
 
   // ── Body ──────────────────────────────────────────────────────────────────

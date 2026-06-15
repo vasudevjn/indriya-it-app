@@ -167,6 +167,12 @@ export async function uploadAttachment(
   return data as DbTicketAttachment;
 }
 
+export async function deleteAttachment(attachmentId: string, storagePath: string): Promise<void> {
+  await supabase.storage.from('ticket-attachments').remove([storagePath]);
+  const { error } = await supabase.from('ticket_attachments').delete().eq('id', attachmentId);
+  if (error) throw error;
+}
+
 export function getAttachmentUrl(path: string): string {
   const { data } = supabase.storage.from('ticket-attachments').getPublicUrl(path);
   return data.publicUrl;

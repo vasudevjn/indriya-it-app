@@ -37,8 +37,8 @@ interface TicketDraftStore {
 const initialState = {
   description: '',
   priority: 'medium' as TicketPriority,
-  category: 'other' as TicketCategory,
-  subcategory: 'General Query',
+  category: 'application_issues' as TicketCategory,
+  subcategory: 'ERP - Finance',
   attachments: [] as AttachmentItem[],
   messages: [] as DraftMessage[],
   step: 'description' as const,
