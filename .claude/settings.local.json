@@ -13,7 +13,10 @@
       "Bash(python -c ' *)",
       "Bash(npx expo *)",
       "Bash(node -e \"try{const v=require\\('./node_modules/@expo/ngrok/package.json'\\).version;console.log\\('@expo/ngrok:',v\\)}catch\\(e\\){console.log\\('@expo/ngrok: NOT INSTALLED'\\)} ; try{const v=require\\('./node_modules/ngrok/package.json'\\).version;console.log\\('ngrok:',v\\)}catch\\(e\\){console.log\\('ngrok: NOT INSTALLED'\\)}\")",
-      "Bash(node -e \"const v=require\\('./node_modules/ngrok/package.json'\\).version;console.log\\('ngrok:',v\\)\")"
+      "Bash(node -e \"const v=require\\('./node_modules/ngrok/package.json'\\).version;console.log\\('ngrok:',v\\)\")",
+      "Bash(dir components *)",
+      "PowerShell(Get-ChildItem -Path . -Depth 1 | Where-Object { $_.PSIsContainer })",
+      "Bash(xargs grep -l \"gold_rates\")"
     ]
   }
 }

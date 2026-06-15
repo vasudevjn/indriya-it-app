@@ -7,7 +7,8 @@ export async function getNotifications(userId: string): Promise<DbNotification[]
     .from('notifications')
     .select('*')
     .eq('recipient_id', userId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(100);
   if (error) throw error;
   return (data ?? []) as DbNotification[];
 }

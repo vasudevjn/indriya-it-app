@@ -76,6 +76,8 @@ export function useUpdateTicket(ticketId: string) {
       resolution?: string;
       resolved_at?: string;
       description?: string;
+      category?: string | null;
+      subcategory?: string | null;
     }) => updateTicket(ticketId, updates),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QUERY_KEYS.ticket(ticketId) });

@@ -5,6 +5,8 @@ import { theme } from '../../constants/theme';
 
 export default function AdminLayout() {
   const unreadCount = useNotificationStore((s) => s.unreadCount);
+  const unreadAnnouncementCount = useNotificationStore((s) => s.unreadAnnouncementCount);
+  const totalUnread = unreadCount + unreadAnnouncementCount;
 
   return (
     <Tabs
@@ -38,7 +40,7 @@ export default function AdminLayout() {
         options={{
           title: 'Alerts',
           tabBarIcon: ({ color, size }) => <Ionicons name="notifications-outline" size={size} color={color} />,
-          tabBarBadge: unreadCount > 0 ? unreadCount : undefined,
+          tabBarBadge: totalUnread > 0 ? totalUnread : undefined,
         }}
       />
 

@@ -11,6 +11,14 @@ import { theme } from '../../constants/theme';
 // Raw Unicode chars in JSX text nodes can confuse Metro/Hermes on some Android builds
 const RUPEE = String.fromCharCode(0x20B9);
 
+// Purities to display in the card, in order, mapped from the D365 API purity string
+const DISPLAY_PURITIES = [
+  { purity: '24KT 999', label: '24K (999)' },
+  { purity: '24KT 995', label: '24K (995)' },
+  { purity: '22KT',     label: '22K (916)' },
+  { purity: '18KT',     label: '18K (750)' },
+] as const;
+
 interface RateColumnProps {
   karat: string;
   rate: number;
@@ -23,7 +31,7 @@ function RateColumn({ karat, rate, isLast }: RateColumnProps) {
       <View style={styles.rateColumn}>
         <Text style={styles.karatLabel}>{karat}</Text>
         <Text style={styles.rateValue}>
-          {RUPEE}{rate.toLocaleString('en-IN')}
+          {RUPEE}{rate.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </Text>
       </View>
       {!isLast && <View style={styles.verticalDivider} />}
@@ -32,7 +40,15 @@ function RateColumn({ karat, rate, isLast }: RateColumnProps) {
 }
 
 export function GoldRateCard() {
-  const { data: rate, isLoading, refetch, isRefetching } = useGoldRate();
+  const { data, isLoading, refetch, isRefetching } = useGoldRate();
+
+  // Build the list of columns that actually have a rate value
+  const columns = data
+    ? DISPLAY_PURITIES.flatMap((item) => {
+        const rate = data.rates[item.purity];
+        return rate !== undefined ? [{ ...item, rate }] : [];
+      })
+    : [];
 
   return (
     <View style={[styles.card, theme.shadows.md]}>
@@ -61,18 +77,22 @@ export function GoldRateCard() {
       {/* Content */}
       {isLoading ? (
         <ActivityIndicator color={theme.colors.accent} style={{ marginVertical: theme.spacing.xl }} />
-      ) : rate ? (
+      ) : columns.length > 0 ? (
         <>
           <View style={styles.ratesRow}>
-            <RateColumn karat="24K (999)" rate={rate.rate_24k}     isLast={false} />
-            <RateColumn karat="24K (995)" rate={rate.rate_24k_995} isLast={false} />
-            <RateColumn karat="22K (916)" rate={rate.rate_22k}     isLast={false} />
-            <RateColumn karat="18K (750)" rate={rate.rate_18k}     isLast />
+            {columns.map((col, index) => (
+              <RateColumn
+                key={col.purity}
+                karat={col.label}
+                rate={col.rate}
+                isLast={index === columns.length - 1}
+              />
+            ))}
           </View>
           <View style={styles.footer}>
             <Ionicons name="time-outline" size={12} color="rgba(255,255,255,0.35)" />
             <Text style={styles.updatedText}>
-              {'Updated '}{timeAgo(rate.updated_at)}
+              {'Updated '}{timeAgo(data!.updated_at)}
             </Text>
           </View>
         </>
@@ -80,7 +100,7 @@ export function GoldRateCard() {
         <View style={styles.noRateWrap}>
           <Ionicons name="information-circle-outline" size={20} color={theme.colors.accent} />
           <Text style={styles.noRateText}>
-            Gold rate not set. Please contact your admin.
+            Gold rate unavailable. Please try again later.
           </Text>
         </View>
       )}

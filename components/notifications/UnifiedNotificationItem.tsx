@@ -22,7 +22,6 @@ function AnnouncementCard({ item }: { item: FeedItem }) {
           <Ionicons name="megaphone" size={20} color="rgba(201,168,76,0.9)" />
         </View>
         <View style={styles.content}>
-          <Text style={styles.announceTag}>Announcement</Text>
           <Text style={styles.announceTitle} numberOfLines={2}>{item.title}</Text>
           {item.body ? (
             <Text style={styles.announceBody} numberOfLines={2}>{item.body}</Text>
@@ -44,7 +43,6 @@ function GoldRateCard({ item }: { item: FeedItem }) {
           <Ionicons name="trending-up" size={20} color="#C9A84C" />
         </View>
         <View style={styles.content}>
-          <Text style={styles.goldTag}>Gold Rate</Text>
           <Text style={styles.goldTitle} numberOfLines={2}>{item.title}</Text>
           {item.body ? (
             <Text style={styles.goldBody} numberOfLines={2}>{item.body}</Text>
@@ -105,7 +103,6 @@ function TicketCard({ item, onMarkRead }: { item: FeedItem; onMarkRead?: (id: st
           <Ionicons name={icon} size={20} color={color} />
         </View>
         <View style={styles.content}>
-          <Text style={styles.ticketTag}>Ticket</Text>
           <Text style={styles.ticketTitle} numberOfLines={2}>{item.title}</Text>
           {item.body ? (
             <Text style={styles.ticketBody} numberOfLines={2}>{item.body}</Text>
@@ -154,7 +151,7 @@ const styles = StyleSheet.create({
   announceCard: {
     backgroundColor: '#1E3A5F',
     borderRadius: theme.radius.md,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     ...theme.shadows.md,
   },
   announceIconBox: {
@@ -165,14 +162,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-  },
-  announceTag: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#C9A84C',
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: theme.spacing.xs - 1,
   },
   announceTitle: {
     color: '#fff',
@@ -197,7 +186,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.md,
     borderWidth: 1,
     borderColor: 'rgba(201,168,76,0.25)',
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
     ...theme.shadows.sm,
   },
   goldIconBox: {
@@ -208,14 +197,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-  },
-  goldTag: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#C9A84C',
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: theme.spacing.xs - 1,
   },
   goldTitle: {
     color: '#C9A84C',
@@ -237,7 +218,7 @@ const styles = StyleSheet.create({
   // ── C) Ticket ─────────────────────────────────────────────────────────────
   ticketCard: {
     borderRadius: theme.radius.md,
-    padding: theme.spacing.lg,
+    padding: theme.spacing.md,
   },
   ticketUnread: {
     backgroundColor: '#F0F5FF',
@@ -250,14 +231,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     ...theme.shadows.sm,
-  },
-  ticketTag: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: theme.colors.textTertiary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-    marginBottom: theme.spacing.xs - 1,
   },
   ticketTitle: {
     color: theme.colors.textPrimary,

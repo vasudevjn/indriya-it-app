@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,11 @@ import {
   Modal,
   RefreshControl,
   TextInput,
+  Alert,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { useLocalSearchParams, useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -26,14 +30,23 @@ import { useAddComment, useUpdateTicket, useAssignTicket } from '../../hooks/use
 import { useRealtimeTicketDetail } from '../../hooks/useRealtime';
 import { useCurrentUser } from '../../hooks/useCurrentUser';
 import { canAssignTicket, canChangeStatus, canSeeInternalComments } from '../../lib/auth/permissions';
-import { ALL_STATUSES, STATUS_LABELS, PRIORITY_LABELS } from '../../constants/ticket';
-import { CATEGORY_LABELS } from '../../constants/categories';
-import { TicketStatus, UserRole } from '../../types';
+import { ALL_STATUSES, ALL_PRIORITIES, STATUS_LABELS, PRIORITY_LABELS } from '../../constants/ticket';
+import { ALL_CATEGORIES, CATEGORY_LABELS, SUBCATEGORIES, TicketCategory } from '../../constants/categories';
+import { TicketStatus, TicketPriority, UserRole } from '../../types';
+import { deleteAttachment as deleteAttachmentApi, uploadAttachment, getAttachmentUrl } from '../../lib/api/tickets';
+import { AttachmentItem } from '../../stores/ticketDraftStore';
 import { formatDateTime } from '../../lib/utils/date';
 import { createNotification } from '../../lib/api/notifications';
 import { theme } from '../../constants/theme';
 
 type ActiveTab = 'comments' | 'details';
+
+const PRIORITY_TINTS: Record<TicketPriority, string> = {
+  low: '#ECFDF5',
+  medium: '#FFFBEB',
+  high: '#FEF2F2',
+  critical: '#FFF7ED',
+};
 
 export default function TicketDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -50,15 +63,18 @@ export default function TicketDetail() {
   const [statusModal, setStatusModal] = useState(false);
   const [resolutionInput, setResolutionInput] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [descriptionDraft, setDescriptionDraft] = useState('');
+
+  // Edit modal state
+  const [editModal, setEditModal] = useState(false);
+  const [editDesc, setEditDesc] = useState('');
+  const [editCategory, setEditCategory] = useState<TicketCategory | null>(null);
+  const [editSubcategory, setEditSubcategory] = useState<string | null>(null);
+  const [editPriority, setEditPriority] = useState<TicketPriority>('medium');
+  const [removedAttIds, setRemovedAttIds] = useState<string[]>([]);
+  const [newAtts, setNewAtts] = useState<AttachmentItem[]>([]);
+  const [isSavingEdits, setIsSavingEdits] = useState(false);
 
   useRealtimeTicketDetail(id);
-
-  useEffect(() => {
-    if (ticket) setDescriptionDraft(ticket.description);
-  // reset draft only when navigating to a different ticket
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticket?.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -84,6 +100,7 @@ export default function TicketDetail() {
   const canInternal = canSeeInternalComments(profile);
   const isAssignee = ticket.assignee_id === profile.id;
   const isRequester = ticket.requester_id === profile.id;
+  const canEdit = isRequester || isStaff;
 
   const visibleComments = (comments ?? []).filter(
     (c: CommentWithAuthor) => canInternal || !c.is_internal,
@@ -102,6 +119,79 @@ export default function TicketDetail() {
     ...c,
     author: c.author ?? knownAuthors[c.author_id] ?? null,
   }));
+
+  const openEditModal = () => {
+    setEditDesc(ticket.description);
+    setEditCategory((ticket.category as TicketCategory) ?? null);
+    setEditSubcategory(ticket.subcategory ?? null);
+    setEditPriority(ticket.priority);
+    setRemovedAttIds([]);
+    setNewAtts([]);
+    setEditModal(true);
+  };
+
+  const handlePickPhoto = async () => {
+    const totalAtts = ticket.attachments.filter(a => !removedAttIds.includes(a.id)).length + newAtts.length;
+    if (totalAtts >= 5) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setNewAtts(prev => [...prev, { uri: asset.uri, name: asset.fileName ?? `photo_${Date.now()}.jpg`, type: 'image' }]);
+    }
+  };
+
+  const handlePickVideo = async () => {
+    const totalAtts = ticket.attachments.filter(a => !removedAttIds.includes(a.id)).length + newAtts.length;
+    if (totalAtts >= 5) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      quality: 1,
+    });
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      setNewAtts(prev => [...prev, { uri: asset.uri, name: asset.fileName ?? `video_${Date.now()}.mp4`, type: 'video' }]);
+    }
+  };
+
+  const handlePickDocument = async () => {
+    const totalAtts = ticket.attachments.filter(a => !removedAttIds.includes(a.id)).length + newAtts.length;
+    if (totalAtts >= 5) return;
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'application/msword', 'text/plain', '*/*'],
+      copyToCacheDirectory: true,
+    });
+    if (!result.canceled && result.assets?.[0]) {
+      const asset = result.assets[0];
+      setNewAtts(prev => [...prev, { uri: asset.uri, name: asset.name, type: 'document', mimeType: asset.mimeType ?? undefined }]);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    setIsSavingEdits(true);
+    try {
+      for (const attId of removedAttIds) {
+        const att = ticket.attachments.find(a => a.id === attId);
+        if (att) await deleteAttachmentApi(attId, att.storage_path);
+      }
+      for (const att of newAtts) {
+        await uploadAttachment(ticket.id, att.uri, att.name, att.type, att.mimeType);
+      }
+    } catch {
+      setIsSavingEdits(false);
+      Alert.alert('Error', 'Failed to update attachments. Please try again.');
+      return;
+    }
+    updateTicket(
+      { description: editDesc, category: editCategory, subcategory: editSubcategory, priority: editPriority },
+      {
+        onSuccess: () => { setEditModal(false); setIsSavingEdits(false); },
+        onError: () => setIsSavingEdits(false),
+      },
+    );
+  };
 
   const handleStatusChange = (status: TicketStatus) => {
     setStatusModal(false);
@@ -206,7 +296,7 @@ export default function TicketDetail() {
       )}
 
       {/* 4. Tab Navigator */}
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { alignItems: 'center' }]}>
         {(['comments', 'details'] as const).map((tab) => (
           <TouchableOpacity
             key={tab}
@@ -220,6 +310,13 @@ export default function TicketDetail() {
             {activeTab === tab && <View style={styles.tabIndicator} />}
           </TouchableOpacity>
         ))}
+        <View style={{ flex: 1 }} />
+        {activeTab === 'details' && canEdit && (
+          <TouchableOpacity style={styles.tabEditBtn} onPress={openEditModal} activeOpacity={0.7}>
+            <Ionicons name="pencil-outline" size={18} color={theme.colors.brand} />
+            <Text style={styles.tabEditBtnLabel}>Edit</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* 5a. Comments Tab */}
@@ -270,43 +367,8 @@ export default function TicketDetail() {
         >
           {/* Card 1: Description */}
           <View style={styles.card}>
-            <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardLabel}>DESCRIPTION</Text>
-              {isRequester && <Text style={styles.tapToEdit}>Tap to Edit</Text>}
-            </View>
-            {isRequester ? (
-              <>
-                <TextInput
-                  style={styles.descInput}
-                  value={descriptionDraft}
-                  onChangeText={setDescriptionDraft}
-                  multiline
-                  placeholderTextColor={theme.colors.textTertiary}
-                />
-                <View style={styles.descFooter}>
-                  <View style={styles.descInfoLeft}>
-                    <Ionicons name="information-circle-outline" size={13} color={theme.colors.textTertiary} />
-                    <Text style={styles.descInfoText}>Only you can edit this</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.savePill}
-                    onPress={() => updateTicket({ description: descriptionDraft })}
-                    disabled={updatingTicket}
-                    activeOpacity={0.75}
-                  >
-                    <Text style={styles.savePillText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={styles.descReadText}>{ticket.description}</Text>
-                <View style={styles.readOnlyBadge}>
-                  <Ionicons name="lock-closed-outline" size={11} color={theme.colors.textTertiary} />
-                  <Text style={styles.readOnlyText}>Read Only</Text>
-                </View>
-              </>
-            )}
+            <Text style={styles.cardLabel}>DESCRIPTION</Text>
+            <Text style={styles.descReadText}>{ticket.description}</Text>
           </View>
 
           {/* Card 2: Info grid */}
@@ -350,6 +412,197 @@ export default function TicketDetail() {
           </View>
         </ScrollView>
       )}
+
+      {/* Edit ticket modal */}
+      <Modal
+        visible={editModal}
+        animationType="slide"
+        onRequestClose={() => !isSavingEdits && setEditModal(false)}
+      >
+        <View style={styles.editRoot}>
+          {/* Header — brand bg matching the app */}
+          <View style={[styles.editHeader, { paddingTop: insets.top + theme.spacing.sm }]}>
+            <TouchableOpacity onPress={() => setEditModal(false)} disabled={isSavingEdits} activeOpacity={0.7}>
+              <Text style={[styles.editHeaderCancel, isSavingEdits && { opacity: 0.4 }]}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.editHeaderTitle}>Edit Ticket</Text>
+            <TouchableOpacity onPress={handleSaveEdit} disabled={isSavingEdits} activeOpacity={0.7}>
+              <Text style={[styles.editHeaderSave, isSavingEdits && { opacity: 0.4 }]}>
+                {isSavingEdits ? 'Saving…' : 'Save'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+            <ScrollView contentContainerStyle={styles.editContent} keyboardShouldPersistTaps="handled">
+
+              {/* Description */}
+              <View style={styles.editCard}>
+                <Text style={styles.editCardLabel}>DESCRIPTION</Text>
+                <TextInput
+                  style={styles.editDescInput}
+                  value={editDesc}
+                  onChangeText={setEditDesc}
+                  multiline
+                  placeholder="Describe the issue…"
+                  placeholderTextColor={theme.colors.textTertiary}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              {/* Category + Sub-category in one card */}
+              <View style={styles.editCard}>
+                <Text style={styles.editCardLabel}>CATEGORY</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.editHScroll}
+                >
+                  {ALL_CATEGORIES.map(cat => (
+                    <TouchableOpacity
+                      key={cat}
+                      style={[styles.editCatPill, editCategory === cat && styles.editCatPillSelected]}
+                      onPress={() => { setEditCategory(cat); setEditSubcategory(null); }}
+                      activeOpacity={0.75}
+                    >
+                      <Text style={[styles.editCatPillText, editCategory === cat && styles.editCatPillTextSelected]}>
+                        {CATEGORY_LABELS[cat]}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                {editCategory && (
+                  <>
+                    <Text style={[styles.editCardLabel, { marginTop: theme.spacing.sm }]}>SUB-CATEGORY</Text>
+                    <View style={styles.editSubCatRow}>
+                      {SUBCATEGORIES[editCategory].map(sub => (
+                        <TouchableOpacity
+                          key={sub}
+                          style={[styles.editCatPill, editSubcategory === sub && styles.editCatPillSelected]}
+                          onPress={() => setEditSubcategory(sub)}
+                          activeOpacity={0.75}
+                        >
+                          <Text style={[styles.editCatPillText, editSubcategory === sub && styles.editCatPillTextSelected]}>
+                            {sub}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </>
+                )}
+              </View>
+
+              {/* Priority */}
+              <View style={styles.editCard}>
+                <Text style={styles.editCardLabel}>PRIORITY</Text>
+                <View style={styles.editPillRow}>
+                  {ALL_PRIORITIES.map(p => {
+                    const sel = editPriority === p;
+                    return (
+                      <TouchableOpacity
+                        key={p}
+                        style={[styles.editPill, sel && { backgroundColor: PRIORITY_TINTS[p], borderColor: theme.priorityColors[p] }]}
+                        onPress={() => setEditPriority(p)}
+                        activeOpacity={0.75}
+                      >
+                        <Text style={[styles.editPillText, sel && { color: theme.priorityColors[p] }]}>
+                          {PRIORITY_LABELS[p]}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Attachments */}
+              <View style={styles.editCard}>
+                <Text style={styles.editCardLabel}>
+                  {`ATTACHMENTS — ${ticket.attachments.filter(a => !removedAttIds.includes(a.id)).length + newAtts.length}/5`}
+                </Text>
+
+                {/* Thumbnails */}
+                {(ticket.attachments.filter(a => !removedAttIds.includes(a.id)).length > 0 || newAtts.length > 0) && (
+                  <View style={styles.editThumbRow}>
+                    {ticket.attachments.filter(a => !removedAttIds.includes(a.id)).map(att => {
+                      const url = getAttachmentUrl(att.storage_path);
+                      const isImage = !att.file_type || att.file_type === 'image';
+                      return (
+                        <View key={att.id} style={styles.editThumbWrap}>
+                          {isImage ? (
+                            <Image source={{ uri: url }} style={styles.editThumb} />
+                          ) : (
+                            <View style={[styles.editThumb, styles.editFileThumb]}>
+                              <Ionicons
+                                name={att.file_type === 'video' ? 'videocam' : 'document-text'}
+                                size={24}
+                                color={att.file_type === 'video' ? '#7C3AED' : '#D97706'}
+                              />
+                              <Text style={styles.editFileThumbLabel} numberOfLines={1}>
+                                {att.file_name?.split('.').pop()?.toUpperCase()}
+                              </Text>
+                            </View>
+                          )}
+                          <TouchableOpacity
+                            style={styles.editRemoveBtn}
+                            onPress={() => setRemovedAttIds(ids => [...ids, att.id])}
+                          >
+                            <Ionicons name="close-circle" size={20} color="#EF4444" />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                    {newAtts.map((att, i) => (
+                      <View key={`new-${i}`} style={styles.editThumbWrap}>
+                        {att.type === 'image' ? (
+                          <Image source={{ uri: att.uri }} style={styles.editThumb} />
+                        ) : (
+                          <View style={[styles.editThumb, styles.editFileThumb]}>
+                            <Ionicons
+                              name={att.type === 'video' ? 'videocam' : 'document-text'}
+                              size={24}
+                              color={att.type === 'video' ? '#7C3AED' : '#D97706'}
+                            />
+                            <Text style={styles.editFileThumbLabel} numberOfLines={1}>
+                              {att.name.split('.').pop()?.toUpperCase()}
+                            </Text>
+                          </View>
+                        )}
+                        <TouchableOpacity
+                          style={styles.editRemoveBtn}
+                          onPress={() => setNewAtts(prev => prev.filter((_, idx) => idx !== i))}
+                        >
+                          <Ionicons name="close-circle" size={20} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* Add buttons */}
+                {(ticket.attachments.filter(a => !removedAttIds.includes(a.id)).length + newAtts.length) < 5 && (
+                  <View style={styles.editAttBtnRow}>
+                    <TouchableOpacity style={styles.editAttTypeBtn} onPress={handlePickPhoto} activeOpacity={0.75}>
+                      <Ionicons name="camera-outline" size={22} color={theme.colors.brand} />
+                      <Text style={styles.editAttTypeBtnLabel}>Photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.editAttTypeBtn} onPress={handlePickVideo} activeOpacity={0.75}>
+                      <Ionicons name="videocam-outline" size={22} color="#7C3AED" />
+                      <Text style={[styles.editAttTypeBtnLabel, { color: '#7C3AED' }]}>Video</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.editAttTypeBtn} onPress={handlePickDocument} activeOpacity={0.75}>
+                      <Ionicons name="document-text-outline" size={22} color="#D97706" />
+                      <Text style={[styles.editAttTypeBtnLabel, { color: '#D97706' }]}>Document</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </View>
+      </Modal>
 
       {/* Status change modal */}
       <Modal
@@ -688,6 +941,182 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: theme.spacing.xs,
+  },
+
+  // ── Tab Edit Button ───────────────────────────────────────────────────────
+  tabEditBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  tabEditBtnLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: theme.colors.brand,
+  },
+
+  // ── Edit Modal ────────────────────────────────────────────────────────────
+  editRoot: {
+    flex: 1,
+    backgroundColor: theme.colors.bg,
+  },
+  editHeader: {
+    backgroundColor: theme.colors.brand,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
+  },
+  editHeaderTitle: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 17,
+  },
+  editHeaderCancel: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 15,
+    fontWeight: '500',
+    minWidth: 60,
+  },
+  editHeaderSave: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+    minWidth: 60,
+    textAlign: 'right',
+  },
+  editContent: {
+    padding: theme.spacing.lg,
+    gap: theme.spacing.md,
+  },
+  editCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.radius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    padding: theme.spacing.lg,
+    gap: theme.spacing.sm,
+    ...theme.shadows.sm,
+  },
+  editCardLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.textSecondary,
+    letterSpacing: 0.8,
+  },
+  editDescInput: {
+    backgroundColor: theme.colors.surface2,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.radius.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    fontSize: 14,
+    color: theme.colors.textPrimary,
+    lineHeight: 20,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  editHScroll: {
+    gap: theme.spacing.xs,
+    paddingBottom: theme.spacing.xs,
+  },
+  editSubCatRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.xs,
+  },
+  editCatPill: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm - 2,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    backgroundColor: theme.colors.surface2,
+    borderColor: theme.colors.border,
+  },
+  editCatPillSelected: {
+    backgroundColor: theme.colors.brand,
+    borderColor: theme.colors.brand,
+  },
+  editCatPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textTertiary,
+  },
+  editCatPillTextSelected: {
+    color: '#fff',
+  },
+  editPillRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+  },
+  editPill: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1.5,
+    backgroundColor: theme.colors.surface2,
+    borderColor: theme.colors.border,
+  },
+  editPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textTertiary,
+  },
+  editThumbRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+  },
+  editThumbWrap: {
+    position: 'relative',
+  },
+  editThumb: {
+    width: 80,
+    height: 80,
+    borderRadius: theme.radius.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  editFileThumb: {
+    backgroundColor: theme.colors.surface2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+  },
+  editFileThumbLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: theme.colors.textSecondary,
+  },
+  editRemoveBtn: {
+    position: 'absolute',
+    top: -(theme.spacing.sm - 2),
+    right: -(theme.spacing.sm - 2),
+  },
+  editAttBtnRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  editAttTypeBtn: {
+    flex: 1,
+    backgroundColor: theme.colors.surface2,
+    borderRadius: theme.radius.sm,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  editAttTypeBtnLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.brand,
   },
 
   // ── Status Modal ──────────────────────────────────────────────────────────

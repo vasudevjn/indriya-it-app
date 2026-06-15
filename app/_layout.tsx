@@ -10,10 +10,9 @@ import Constants from 'expo-constants';
 import { queryClient } from '../lib/queryClient';
 import { useAuth } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
-import { useRealtimeNotifications } from '../hooks/useRealtime';
 import { updatePushToken } from '../lib/api/profiles';
 import { LoadingOverlay } from '../components/common/LoadingOverlay';
-import { useNotifications } from '../hooks/useNotifications';
+import { useUnifiedNotifications } from '../hooks/useUnifiedNotifications';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -48,14 +47,10 @@ function AuthGate() {
    */
   const lastNav = useRef<string | null>(null);
 
-  useRealtimeNotifications(profile?.id ?? '');
-
-  /**
-   * Fetch notifications globally as soon as the profile is known.
-   * This populates the unread badge count BEFORE the Notifications tab is visited.
-   * React Query caches the result, so the Notifications screen reuses it for free.
-   */
-  useNotifications(profile?.id ?? '');
+  // Fetch notifications + broadcasts globally so the bottom-bar badge reflects
+  // both ticket alerts and announcement unread counts before the user opens the
+  // Notifications tab. React Query caches results, so the tab reuses them for free.
+  useUnifiedNotifications(profile?.id ?? '', profile?.store_id ?? null);
 
   useEffect(() => {
     if (!profile) return;
