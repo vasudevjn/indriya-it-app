@@ -2,7 +2,7 @@
   "expo": {
     "name": "Indriya IT App",
     "slug": "indriya-it-app",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "scheme": "indriya",
@@ -14,6 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "buildNumber": "1",
       "bundleIdentifier": "com.indriyajewellery.itapp",
       "infoPlist": {
         "NSCameraUsageDescription": "Used to attach photos to IT tickets",
@@ -21,6 +22,7 @@
       }
     },
     "android": {
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#1B3A7A"
