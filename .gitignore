@@ -3,6 +3,8 @@ node_modules/
 dist/
 web-build/
 .DS_Store
+.claude/
+supabase/.temp/
 *.orig.*
 *.jks
 *.p8
